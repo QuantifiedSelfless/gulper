@@ -12,7 +12,7 @@ class UserProcess(BaseHandler):
         userid = self.get_argument('userid')
         publickey = self.get_argument('publickey')
         data = json.loads(self.request.body)
-        # create user object and trigger scrape/process
+        # TODO: create user object and trigger scrape/process
 
 
 class UserStatus(BaseHandler):
