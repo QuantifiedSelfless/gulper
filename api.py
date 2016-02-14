@@ -3,8 +3,8 @@ from tornado import web
 from tornado import options
 
 from app.user import UserProcess, UserStatus
-
 from lib import config
+from lib import processors
 
 
 # Set basic options
@@ -21,11 +21,19 @@ if __name__ == "__main__":
     config.read_config(options.options.config)
     CONFIG = config.CONFIG
 
+    processor_handlers = [
+        ph
+        for p in processors.processors
+        for ph in p.register_handlers()
+    ]
+    print("Registering process handlers:")
+    print('\t' + "\n\t".join(ph[0] for ph in processor_handlers))
+
     app = web.Application(
         [
             (r'/api/user/process', UserProcess),
             (r'/api/user/status', UserStatus),
-        ],
+        ] + processor_handlers,
         debug=debug,
         cookie_secret=CONFIG.get("cookie_secret"),
     )

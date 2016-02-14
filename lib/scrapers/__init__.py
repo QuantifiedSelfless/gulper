@@ -1,7 +1,7 @@
 from tornado import gen
 from collections import defaultdict
 
-from .sample_scraper import SampleScraper
+from .samplescraper import SampleScraper
 
 
 scrapers = [
@@ -15,5 +15,5 @@ def scrape(user_data):
     data = defaultdict(list)
     for result in results:
         for key, values in result.items():
-            data[key].append(values)
+            data[key].extend(values)
     return data
