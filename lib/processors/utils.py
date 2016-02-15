@@ -13,7 +13,7 @@ def make_handler(handler):
             privatekey = None
             if privatekey_pem:
                 privatekey = cryptohelper.import_key(privatekey)
-            data = yield handler(userid, privatekey)
+            data = yield handler(userid, self, privatekey)
             return self.api_response(data)
     return ProcAPIHandler
 

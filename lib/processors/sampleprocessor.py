@@ -15,7 +15,7 @@ class SampleProcessor(object):
         return True
 
     @gen.coroutine
-    def num_characters(self, userid, public_key=None):
+    def num_characters(self, userid, request, public_key=None):
         return self.data.get(userid, 'userid not found')
 
     @process_api_handler
