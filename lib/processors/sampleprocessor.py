@@ -37,4 +37,3 @@ class SampleProcessor(object):
         return [
             ('num_characters', self.num_characters),
         ]
-
