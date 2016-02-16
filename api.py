@@ -21,6 +21,8 @@ if __name__ == "__main__":
     config.read_config(options.options.config)
     CONFIG = config.CONFIG
 
+    enable_processing = CONFIG.get('enable_processing').lower() == 'true'
+
     processor_handlers = [
         ph
         for p in processors.processors
@@ -36,6 +38,7 @@ if __name__ == "__main__":
         ] + processor_handlers,
         debug=debug,
         cookie_secret=CONFIG.get("cookie_secret"),
+        enable_processing=enable_processing,
     )
 
     app.listen(port, protocol='https')

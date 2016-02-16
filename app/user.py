@@ -16,9 +16,11 @@ class UserProcess(BaseHandler):
         publickey = self.get_argument('publickey', None)
         data = json.loads(self.request.body.decode())
 
+        enable_processing = self.application.settings['enable_processing']
         # TODO: create user object and trigger scrape/process
-        user = UserScraper(userid, publickey, data)
-        ioloop.IOLoop.current().add_callback(user.start)
+        if enable_processing:
+            user = UserScraper(userid, publickey, data)
+            ioloop.IOLoop.current().add_callback(user.start)
         self.api_response("OK")
 
 

@@ -1,19 +1,16 @@
 from tornado import gen
-from collections import defaultdict
 
 from .samplescraper import SampleScraper
+from .youtube import YouTubeScraper
 
 
 scrapers = [
-    SampleScraper()
+    SampleScraper(),
+    YouTubeScraper()
 ]
 
 
 @gen.coroutine
 def scrape(user_data):
-    results = yield [s.scrape(user_data) for s in scrapers]
-    data = defaultdict(list)
-    for result in results:
-        for key, values in result.items():
-            data[key].extend(values)
+    data = yield {s.name: s.scrape(user_data) for s in scrapers}
     return data
