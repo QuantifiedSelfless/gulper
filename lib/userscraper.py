@@ -1,5 +1,4 @@
 from tornado import gen
-import logging
 import cryptohelper
 
 from . import scrapers
@@ -22,12 +21,6 @@ class UserScraper(object):
         self.data = yield scrapers.scrape(self)
         self.process_results = yield processors.process(self)
 
-    @gen.coroutine
-    def _wrap_scrape(self, scraper):
-        try:
-            data = yield scraper(self.userid, self.services)
-            self.data.update(data)
-            return True
-        except Exception:
-            logging.exception("Could not run scaper")
-            return False
+    def _save_process_results(self, results):
+        #  TODO: should this ping back to QS or save in it's own DB?
+        pass
