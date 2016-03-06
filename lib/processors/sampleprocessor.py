@@ -22,7 +22,7 @@ class SampleProcessor(object):
         return True
 
     @gen.coroutine
-    def num_characters(self, userid, request, public_key=None):
+    def num_characters(self, userid, request, private_key=None):
         """
         Returns relevant data that the exhibits may want to know
         """
