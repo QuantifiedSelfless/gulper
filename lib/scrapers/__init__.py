@@ -2,11 +2,13 @@ from tornado import gen
 
 from .samplescraper import SampleScraper
 from .youtube import YouTubeScraper
+from .gphotos import GPhotosScraper
 
 
 scrapers = [
-    SampleScraper(),
-    YouTubeScraper()
+    # SampleScraper(),
+    # YouTubeScraper()
+    GPhotosScraper(),
 ]
 
 
