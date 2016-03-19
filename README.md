@@ -5,7 +5,7 @@
 First install system dependencies
 
 ```
-# apt install libboost-python-dev python3 python3-pip
+$ bash dependencies.sh
 ```
 
 Then python dependencies

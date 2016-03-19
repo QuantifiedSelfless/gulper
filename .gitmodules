@@ -1,0 +1,3 @@
+[submodule "openface"]
+	path = openface
+	url = git@github.com:mynameisfiber/openface.git
