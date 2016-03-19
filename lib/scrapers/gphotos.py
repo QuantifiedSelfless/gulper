@@ -2,6 +2,7 @@ from tornado import gen
 
 import httplib2
 from lib.config import CONFIG
+from lib.facefinder import find_faces_url
 from .utils import apiclient_paginate
 
 from apiclient.discovery import build
@@ -10,12 +11,13 @@ from oauth2client import client
 
 class GPhotosScraper(object):
     name = 'gphotos'
+    num_images_per_user = 100
 
     @gen.coroutine
     def scrape(self, user_data):
         """
         Scrape photos from google photos using the following API:
-            https://developers.google.com/picasa-web/docs/2.0/developers_guide_protocol
+            https://developers.google.com/drive/v3/reference/
         """
         print("Scraping user: ", user_data.userid)
         try:
@@ -35,7 +37,15 @@ class GPhotosScraper(object):
             id_token=oauth.get('id_token', None)
         )
         http = credentials.authorize(httplib2.Http())
-        gphotos = build('picassa', 'v3', http)
+        gplus = build('drive', 'v3', http)
 
-        result = {}
-        return result
+        photos = list(apiclient_paginate(gplus.files(), 'list', {
+            'spaces': 'photos',
+            'fields': 'files,kind,nextPageToken',
+        }, max_results=self.num_images_per_user))
+        for photo in photos:
+            faces = yield find_faces_url(photo['thumbnailLink'])
+            print(photo['thumbnailLink'], faces)
+            photo['faces'] = faces
+
+        return photos

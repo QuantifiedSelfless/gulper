@@ -6,7 +6,7 @@ from .gphotos import GPhotosScraper
 
 
 scrapers = [
-    # SampleScraper(),
+    SampleScraper(),
     # YouTubeScraper()
     GPhotosScraper(),
 ]
