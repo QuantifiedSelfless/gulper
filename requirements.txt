@@ -1,3 +1,4 @@
+pycrypto
 google-api-python-client
 git+https://github.com/dianakhuang/pytumblr.git@diana/python-3-support
 tweepy
