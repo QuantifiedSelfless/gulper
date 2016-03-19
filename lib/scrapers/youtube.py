@@ -18,6 +18,8 @@ class YouTubeScraper(object):
             oauth = user_data.services['google']
         except KeyError:
             return False
+        if oauth in ('noshare', 'noacct'):
+            return False
         credentials = client.OAuth2Credentials(
             access_token=oauth['access_token'],
             client_id=CONFIG.get('google_client_id'),
@@ -44,15 +46,11 @@ class YouTubeScraper(object):
                 'playlistId': playlistid,
             }))
             special_videos[name] = videos
-            print(name, len(videos))
 
         playlists = list(apiclient_paginate(youtube.playlists(), 'list', {
             'part': 'id,snippet',
             'mine': True,
         }))
-        for playlist in playlists:
-            snippet = playlist['snippet']
-            print(snippet['title'], snippet['description'])
 
         subscriptions = list(apiclient_paginate(
             youtube.subscriptions(), 'list', {
@@ -60,9 +58,6 @@ class YouTubeScraper(object):
                 'mine': True,
             })
         )
-        for subscription in subscriptions:
-            snippet = subscription['snippet']
-            print(snippet['title'])
 
         result = {
             'subscriptions': subscriptions,

@@ -2,7 +2,7 @@ from tornado import ioloop
 from tornado import web
 from tornado import options
 
-from app.user import UserProcess, UserStatus
+from app.user import UserProcess, UserStatus, ShowtimeProcess
 from lib import config
 from lib import processors
 
@@ -21,8 +21,6 @@ if __name__ == "__main__":
     config.read_config(options.options.config)
     CONFIG = config.CONFIG
 
-    enable_processing = CONFIG.get('enable_processing').lower() == 'true'
-
     processor_handlers = [
         ph
         for p in processors.processors
@@ -33,12 +31,12 @@ if __name__ == "__main__":
 
     app = web.Application(
         [
+            (r'/api/showtime/process', ShowtimeProcess),
             (r'/api/user/process', UserProcess),
             (r'/api/user/status', UserStatus),
         ] + processor_handlers,
         debug=debug,
         cookie_secret=CONFIG.get("cookie_secret"),
-        enable_processing=enable_processing,
     )
 
     app.listen(port, protocol='https')
