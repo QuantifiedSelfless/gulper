@@ -59,7 +59,8 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
             uid = unique_id(url)
         except ValueError:
             continue
-        filepath = os.path.join(data_path, uid)
+        os.makedirs(os.path.join(data_path, uid[0], uid[1]), exist_ok=True)
+        filepath = os.path.join(data_path, uid[0], uid[1], uid)
         if os.path.exists(filepath + '.pkl'):
             continue
         try:
