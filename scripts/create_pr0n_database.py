@@ -10,6 +10,7 @@ import pickle
 
 from io import BytesIO
 import hashlib
+from itertools import chain
 
 sys.path.append(os.path.abspath(os.path.join(__file__,  '../..')))
 from lib import openface
@@ -46,7 +47,12 @@ def skip_unfound(_iter):
 @gen.coroutine
 def process_subreddit(subreddit, data_path='./data/pr0n/'):
     reddit = praw.Reddit(user_agent='gulperpr0n')
-    submissions = skip_unfound(reddit.get_subreddit(subreddit).get_hot())
+    submissions = skip_unfound(chain(
+        reddit.get_subreddit(subreddit).get_hot(),
+        reddit.get_subreddit(subreddit).get_top_from_all(),
+        reddit.get_subreddit(subreddit).get_top_from_year(),
+        reddit.get_subreddit(subreddit).get_top_from_month(),
+    ))
     for submission in submissions:
         try:
             url = normalize_url(submission.url)
@@ -61,7 +67,10 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
         except HTTPError:
             continue
         image_fd = BytesIO(image_req.body)
-        image = Image.open(image_fd)
+        try:
+            image = Image.open(image_fd)
+        except OSError:
+            continue
         image_np = np.array(image)
         try:
             rects, scores, poses = detector.run(image_np)
@@ -69,7 +78,10 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
             continue
         if len(scores) != 1:
             continue
-        face_hash = openface.hash_face(image_np, bb=rects[0])
+        try:
+            face_hash = openface.hash_face(image_np, bb=rects[0])
+        except:
+            continue
         print(subreddit, uid, url)
         data = {
             'url': url,
@@ -78,9 +90,12 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
             'face_hash': face_hash,
             'reddit_submission': submission,
         }
-        image.save(filepath + '.jpg')
-        with open(filepath + '.pkl', 'wb+') as fd:
-            pickle.dump(data, fd, protocol=-1)
+        try:
+            image.save(filepath + '.jpg')
+            with open(filepath + '.pkl', 'wb+') as fd:
+                pickle.dump(data, fd, protocol=-1)
+        except OSError:
+            continue
 
 
 @gen.coroutine
@@ -95,7 +110,10 @@ def process_subreddits():
             todo, subreddits = subreddits[:10], subreddits[10:]
             print("[{}] Exploring subreddits: {}".
                   format(len(subreddits), ', '.join(todo)))
-            yield [process_subreddit(s) for s in todo]
+            try:
+                yield [process_subreddit(s) for s in todo]
+            except Exception as e:
+                print("Got unhandled exception in process: ", e)
             for sub in todo:
                 recommendations = {
                     rec.display_name
