@@ -33,10 +33,20 @@ def unique_id(url):
     return m.digest().hex()
 
 
+def skip_unfound(_iter):
+    while True:
+        try:
+            yield next(_iter)
+        except StopIteration:
+            return
+        except Exception:
+            pass
+
+
 @gen.coroutine
 def process_subreddit(subreddit, data_path='./data/pr0n/'):
     reddit = praw.Reddit(user_agent='gulperpr0n')
-    submissions = reddit.get_subreddit(subreddit).get_hot()
+    submissions = skip_unfound(reddit.get_subreddit(subreddit).get_hot())
     for submission in submissions:
         try:
             url = normalize_url(submission.url)
@@ -49,11 +59,14 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
         try:
             image_req = yield http_client.fetch(url, request_timeout=5)
         except HTTPError:
-            pass
+            continue
         image_fd = BytesIO(image_req.body)
         image = Image.open(image_fd)
         image_np = np.array(image)
-        rects, scores, poses = detector.run(image_np)
+        try:
+            rects, scores, poses = detector.run(image_np)
+        except RuntimeError:
+            continue
         if len(scores) != 1:
             continue
         face_hash = openface.hash_face(image_np, bb=rects[0])
@@ -71,11 +84,34 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
 
 
 @gen.coroutine
-def process_subreddits(subreddits):
-    result = yield [process_subreddit(s) for s in subreddits]
-    return result
+def process_subreddits():
+    reddit = praw.Reddit(user_agent='gulperpr0n')
+    with open('scripts/subreddits.txt') as fd:
+        subreddits = list({s.strip() for s in fd})
+    subreddits_done = set()
+    while True:
+        new_subreddits = set()
+        while subreddits:
+            todo, subreddits = subreddits[:10], subreddits[10:]
+            print("[{}] Exploring subreddits: {}".
+                  format(len(subreddits), ', '.join(todo)))
+            yield [process_subreddit(s) for s in todo]
+            for sub in todo:
+                recommendations = {
+                    rec.display_name
+                    for rec in reddit.get_subreddit_recommendations(sub)
+                }
+                print("Recommendations for {}: {}".
+                      format(sub, ', '.join(recommendations)))
+                new_subreddits.update(recommendations)
+            subreddits_done.update(todo)
+        new_subreddits.difference_update(subreddits_done)
+        subreddits = list(new_subreddits)
+        with open('scripts/subreddits_done.txt', 'w+') as fd:
+            for sub in subreddits_done:
+                fd.write(sub + '\n')
 
 
 if __name__ == "__main__":
-    subreddits = "GentlemanBoners BeautifulFemales prettygirls".split()
-    ioloop.IOLoop().instance().run_sync(lambda: process_subreddits(subreddits))
+    subreddits = "GentlemanBoners BeautifulFemales prettygirls attractivemen ".split()
+    ioloop.IOLoop().instance().run_sync(process_subreddits)
