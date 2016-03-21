@@ -5,3 +5,4 @@ tweepy
 pillow
 dlib
 praw
+git+https://github.com/pythonforfacebook/facebook-sdk.git

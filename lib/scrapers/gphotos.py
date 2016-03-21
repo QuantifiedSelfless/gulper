@@ -4,14 +4,32 @@ import httplib2
 from lib.config import CONFIG
 from lib.facefinder import find_faces_url
 from .utils import apiclient_paginate
+import io
 
 from apiclient.discovery import build
+from apiclient.http import MediaIoBaseDownload
 from oauth2client import client
+
+
+def gdrive_get_file(drive, file_id):
+    request = drive.files().get_media(fileId=file_id)
+    fh = io.BytesIO()
+    downloader = MediaIoBaseDownload(fh, request)
+    done = False
+    while done is False:
+        status, done = downloader.next_chunk()
+        print("Download {}%%.".format(int(status.progress() * 100)))
+    return fh
 
 
 class GPhotosScraper(object):
     name = 'gphotos'
-    num_images_per_user = 100
+
+    @property
+    def num_images_per_user(self):
+        if CONFIG['_mode'] == 'prod':
+            return 1000
+        return 100
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -19,12 +37,11 @@ class GPhotosScraper(object):
         Scrape photos from google photos using the following API:
             https://developers.google.com/drive/v3/reference/
         """
-        print("Scraping user: ", user_data.userid)
         try:
             oauth = user_data.services['google']
         except KeyError:
             return False
-        if oauth in ('noshare', 'noacct'):
+        if 'denied' in oauth:
             return False
         credentials = client.OAuth2Credentials(
             access_token=oauth['access_token'],
@@ -38,14 +55,14 @@ class GPhotosScraper(object):
         )
         http = credentials.authorize(httplib2.Http())
         gplus = build('drive', 'v3', http)
+        print("[gphotos] Scraping user: ", user_data.userid)
 
         photos = list(apiclient_paginate(gplus.files(), 'list', {
             'spaces': 'photos',
             'fields': 'files,kind,nextPageToken',
         }, max_results=self.num_images_per_user))
         for photo in photos:
-            faces = yield find_faces_url(photo['thumbnailLink'])
-            print(photo['thumbnailLink'], faces)
+            faces = yield find_faces_url(photo['thumbnailLink'], upsample=2)
             photo['faces'] = faces
 
         return photos

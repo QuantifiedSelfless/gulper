@@ -10,3 +10,4 @@ def read_config(mode):
     config.read('config.conf')
     CONFIG.update(config['default'])
     CONFIG.update(config[mode])
+    CONFIG['_mode'] = mode

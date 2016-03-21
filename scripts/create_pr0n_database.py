@@ -20,6 +20,12 @@ http_client = AsyncHTTPClient()
 detector = dlib.get_frontal_face_detector()
 
 
+def load_data(fname):
+    abs_path = './data/pr0n/{0[0]}/{0[1]}/{0}'.format(fname)
+    with open(abs_path, 'rb') as fd:
+        return pickle.load(fd)
+
+
 def normalize_url(url):
     if url[-3:] in ('jpg', 'png'):
         return url
