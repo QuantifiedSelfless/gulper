@@ -2,7 +2,7 @@ sudo apt-get install \
     libatlas-base-dev gfortran \
     libjpeg8-dev libtiff4-dev libjasper-dev libpng12-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
-    build-essential cmake git pkg-config \
+    build-essential cmake git pkg-config libreadline-dev \
     libboost-python-dev python3 python3-dev python3-pip
 
 sudo pip3 install numpy
