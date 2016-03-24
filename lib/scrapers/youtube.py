@@ -11,14 +11,19 @@ from oauth2client import client
 class YouTubeScraper(object):
     name = 'youtube'
 
+    @property
+    def num_videos_per_playlist(self):
+        if CONFIG['_mode'] == 'prod':
+            return 250
+        return 25
+
     @gen.coroutine
     def scrape(self, user_data):
-        print("Scraping user: ", user_data.userid)
         try:
             oauth = user_data.services['google']
         except KeyError:
             return False
-        if oauth in ('noshare', 'noacct'):
+        if 'denied' in oauth:
             return False
         credentials = client.OAuth2Credentials(
             access_token=oauth['access_token'],
@@ -32,6 +37,7 @@ class YouTubeScraper(object):
         )
         http = credentials.authorize(httplib2.Http())
         youtube = build('youtube', 'v3', http)
+        print("[youtube] Scraping user: ", user_data.userid)
 
         userinfo = list(apiclient_paginate(youtube.channels(), 'list', {
             'part': 'statistics,contentDetails',
@@ -44,7 +50,7 @@ class YouTubeScraper(object):
             videos = list(apiclient_paginate(youtube.playlistItems(), 'list', {
                 'part': 'snippet',
                 'playlistId': playlistid,
-            }))
+            }, max_results=self.num_videos_per_playlist))
             special_videos[name] = videos
 
         playlists = list(apiclient_paginate(youtube.playlists(), 'list', {

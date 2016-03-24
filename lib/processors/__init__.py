@@ -1,9 +1,11 @@
 from tornado import gen
 from .sampleprocessor import SampleProcessor
+from .debugprocessor import DebugProcessor
 
 
 processors = [
     SampleProcessor(),
+    DebugProcessor(),
 ]
 
 

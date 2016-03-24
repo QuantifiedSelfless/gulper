@@ -1,3 +1,5 @@
 *.sw*
 __pycache__
+*.pyc
 config.conf
+data/
