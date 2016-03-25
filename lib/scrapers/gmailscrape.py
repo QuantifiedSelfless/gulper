@@ -12,6 +12,24 @@ from oauth2client import client
 class GMailScraper(object):
     name = 'gtext'
 
+    def __init__(self):
+        self.tokens = []
+        with open('snippets.txt', 'r') as fd:
+            self.tokens = [s.strip() for s in fd]
+
+    def get_content(raw):
+        data = base64.urlsafe_b64decode(raw)
+        email_parser = EmailParser(policy=policy.default)
+        email = email_parser.parsebytes(data)
+        plain = email.get_body(preferencelist=('plain',))
+        body = None
+        if plain:
+            body = plain.get_payload()
+            email_dict = dict(email)
+            email_dict['body'] = body
+            return email_dict
+
+
     def paginate_messages(self, service, response):
         threads = set()
         if 'messages' in response:
@@ -26,10 +44,13 @@ class GMailScraper(object):
                 threads.add(i['threadId'])
         return messages
 
-    def get_recipient(self, email_data):
+    def get_recipient(self, email_data, parsed=False):
         names = []
-        headers = email_data['payload']['headers']
-        to_field = [d['value'] for d in headers if d['name'] == 'To']
+        if parsed == True:
+            to_field = email_data['To']
+        else:
+            headers = email_data['payload']['headers']
+            to_field = [d['value'] for d in headers if d['name'] == 'To']
         sent_to = to_field.split(', ')
         for i in sent_to:
             names.append(i[0].split(' <')[0])
@@ -38,10 +59,12 @@ class GMailScraper(object):
     def get_raw_from_id(self, service, email_id):
         try:
             msg = service.users().messages().get(userId='me', id=email_id, format='raw').execute()
-            msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
-            mime_msg = email.message_from_string(msg_str)
-            text = mime_msg.get_payload()[0]
-            return text
+            snip = msg['snippet']
+            email = self.get_content(msg['raw'])
+            #msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
+            #mime_msg = email.message_from_string(msg_str)
+            #text = mime_msg.get_payload()[0]
+            return email, snip
         except HTTPError as e:
             print("Exception while scraping gmail: ", e)
 
@@ -99,17 +122,18 @@ class GMailScraper(object):
         print("[gmail] Scraping user: ", user_data.userid)
 
         #Get seed language tokens
-        with open('snippets.txt', 'r') as fd:
-            tokens = [s.strip() for s in fd]
 
         threads = set()
         #Go through each token, seed a search to find threads we want to search through
-        while tokens:
-            next_q = tokens.pop()
-            res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(next_q)).execute()
+        for toke in self.tokens:
+            res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(toke)).execute()
             threads.update(self.paginate_messages(gmail, res)) 
 
-        
+        for thread in threads:
+            email, snippet = self.get_beg_thread(gmail, thread)
+            data['text'].append(email['body'])
+            data['snippets'].append(snippet)
+            people.update(self.get_recipient(email, parsed=True))
 
         return data
         
