@@ -133,7 +133,7 @@ class GMailScraper(object):
             email, snippet = self.get_beg_thread(gmail, thread)
             data['text'].append(email['body'])
             data['snippets'].append(snippet)
-            people.update(self.get_recipient(email, parsed=True))
+            data['people'].update(self.get_recipient(email, parsed=True))
 
         return data
         
