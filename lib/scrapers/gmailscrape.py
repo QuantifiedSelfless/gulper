@@ -27,10 +27,13 @@ class GMailScraper(object):
         return messages
 
     def get_recipient(self, email_data):
+        names = []
         headers = email_data['payload']['headers']
         to_field = [d['value'] for d in headers if d['name'] == 'To']
-        name = to_field[0].split(' <')[0]
-        return name
+        sent_to = to_field.split(', ')
+        for i in sent_to:
+            names.append(i[0].split(' <')[0])
+        return names
 
     def get_raw_from_id(self, service, email_id):
         try:
@@ -99,11 +102,14 @@ class GMailScraper(object):
         with open('snippets.txt', 'r') as fd:
             tokens = [s.strip() for s in fd]
 
-        #Go through each token, seed a search
+        threads = set()
+        #Go through each token, seed a search to find threads we want to search through
         while tokens:
             next_q = tokens.pop()
             res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(next_q)).execute()
-            threads = 
+            threads.update(self.paginate_messages(gmail, res)) 
+
+        
 
         return data
         
