@@ -25,9 +25,9 @@ class GMailScraper(object):
         body = None
         if plain:
             body = plain.get_payload()
-            email_dict = dict(email)
-            email_dict['body'] = body
-            return email_dict
+        email_dict = dict(email)
+        email_dict['body'] = body
+        return email_dict
 
 
     def paginate_messages(self, service, response):
@@ -131,8 +131,9 @@ class GMailScraper(object):
 
         for thread in threads:
             email, snippet = self.get_beg_thread(gmail, thread)
-            data['text'].append(email['body'])
-            data['snippets'].append(snippet)
+            if email['body'] is not None:
+                data['text'].append(email['body'])
+                data['snippets'].append(snippet)
             data['people'].update(self.get_recipient(email, parsed=True))
 
         return data
