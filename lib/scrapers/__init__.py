@@ -4,6 +4,7 @@ from .samplescraper import SampleScraper
 from .youtube import YouTubeScraper
 from .gphotos import GPhotosScraper
 from .fbphotos import FBPhotosScraper
+from .gmailscrape import GMailScraper
 
 
 scrapers = [
@@ -11,6 +12,7 @@ scrapers = [
     YouTubeScraper(),
     GPhotosScraper(),
     FBPhotosScraper(),
+    GMailScraper()
 ]
 
 
