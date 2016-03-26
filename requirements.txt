@@ -4,5 +4,6 @@ git+https://github.com/dianakhuang/pytumblr.git@diana/python-3-support
 tweepy
 pillow
 dlib
+pytumblr
 praw
 git+https://github.com/pythonforfacebook/facebook-sdk.git
