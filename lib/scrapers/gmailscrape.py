@@ -136,5 +136,4 @@ class GMailScraper(object):
                 data['snippets'].append(snippet)
             data['people'].update(self.get_recipient(email, parsed=True))
 
-        return data
-        
+        return data       

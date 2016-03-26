@@ -19,7 +19,6 @@ def filter_text(text_str):
     else
         return False
 
-
 def apiclient_paginate(resource, action, params, http=None, max_results=500):
     request = getattr(resource, action)(**params)
     num_results = 0
