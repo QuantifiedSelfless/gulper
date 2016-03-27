@@ -8,6 +8,7 @@ from .gmailscrape import GMailScraper
 from .fbtext import FBTextScraper
 from .fblikes import FBLikesScraper
 from .fbevents import FBEventsScraper
+from .tumblrscrape import TumblrScraper
 
 
 scrapers = [
@@ -18,7 +19,8 @@ scrapers = [
     GMailScraper(),
     FBTextScraper(),
     FBLikesScraper(),
-    FBEventsScraper
+    FBEventsScraper(),
+    TumblrScraper()
 ]
 
 
