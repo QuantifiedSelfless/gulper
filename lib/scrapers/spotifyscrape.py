@@ -82,7 +82,7 @@ class SpotifyScraper(object):
         spot_data['artists'] = fav_artists
         
         tracks = sp.current_user_saved_tracks()
-        fav_tracks = [ yield self.spot_track_paginate(tracks) ]
+        fav_tracks = yield [ self.spot_track_paginate(tracks) ]
 
         spot_data['tracks'] = fav_tracks
 

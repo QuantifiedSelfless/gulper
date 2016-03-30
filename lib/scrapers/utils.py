@@ -16,7 +16,7 @@ def filter_text(text_str):
     t3 = re.search(phone, text_str)
     if t1 == None and t2 == None and t3 == None:
         return True
-    else
+    else:
         return False
 
 def apiclient_paginate(resource, action, params, http=None, max_results=500):
