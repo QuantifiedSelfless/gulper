@@ -14,7 +14,7 @@ class GMailScraper(object):
 
     def __init__(self):
         self.tokens = []
-        with open('/lib/scrapers/snippets.txt', 'r') as fd:
+        with open('lib/scrapers/snippets.txt', 'r') as fd:
             self.tokens = [s.strip() for s in fd]
 
     def get_content(raw):
