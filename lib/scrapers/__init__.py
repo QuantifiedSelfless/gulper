@@ -9,6 +9,7 @@ from .fbtext import FBTextScraper
 from .fblikes import FBLikesScraper
 from .fbevents import FBEventsScraper
 from .tumblrscrape import TumblrScraper
+from .spotifyscrape import SpotifyScraper
 
 
 scrapers = [
@@ -27,4 +28,6 @@ scrapers = [
 @gen.coroutine
 def scrape(user_data):
     data = yield {s.name: s.scrape(user_data) for s in scrapers}
+    #DELETE THIS LATER
+    print(data)
     return data

@@ -33,5 +33,5 @@ class FBEventsScraper(object):
             eve['name'] = thing.get('name', None)
             eve['status'] = thing.get('rsvp_status', None)
             data['events'].append(eve)
-
+            
         return data
