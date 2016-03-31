@@ -36,7 +36,7 @@ class YouTubeScraper(object):
             id_token=oauth.get('id_token', None)
         )
         http = credentials.authorize(httplib2.Http())
-        youtube = build('youtube', 'v3', http)
+        youtube = build('youtube', 'v3', http=http)
         print("[youtube] Scraping user: ", user_data.userid)
 
         userinfo = list(apiclient_paginate(youtube.channels(), 'list', {

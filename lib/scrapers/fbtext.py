@@ -39,16 +39,16 @@ class FBTextScraper(object):
         }
 
         posts = []
-        while len(posts) < self.num_posts_per_user:
-            posts_blob = yield facebook_paginate(
-                graph.get_connections(
-                    'me',
-                    'posts',
-                    fields='message, link'
-                ),
-                max_results=self.num_posts_per_user
-            )
-            posts, links = self.message_filter(posts_blob)
+        
+        posts_blob = yield facebook_paginate(
+            graph.get_connections(
+                'me',
+                'posts',
+                fields='message, link'
+            ),
+            max_results=self.num_posts_per_user
+        )
+        posts, links = self.message_filter(posts_blob)
 
         #To do comments we'd have to go through the different posts and look
         #Scraping the person's feed is another option, but we get more garbage that way
