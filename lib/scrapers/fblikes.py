@@ -31,3 +31,19 @@ class FBLikesScraper(object):
             data['likes'].append(like['name'])
 
         return data
+
+if __name__ == '__main__':
+    import sys
+    import json
+    myFile = sys.argv[1]
+    fd = open(myFile, 'r')
+    data = fd.read()
+    fd.close()
+    tokens = json.loads(data)
+    FBLikesScraper()
+    
+    print(FBLikesScraper.scrape())
+
+
+
+    

@@ -10,6 +10,7 @@ from .fblikes import FBLikesScraper
 from .fbevents import FBEventsScraper
 from .tumblrscrape import TumblrScraper
 from .spotifyscrape import SpotifyScraper
+from .redditscrape import RedditScraper
 
 
 scrapers = [
@@ -21,7 +22,9 @@ scrapers = [
     FBTextScraper(),
     FBLikesScraper(),
     FBEventsScraper(),
-    TumblrScraper()
+    TumblrScraper(),
+    RedditScraper(),
+    SpotifyScraper()
 ]
 
 
