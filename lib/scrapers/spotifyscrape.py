@@ -63,7 +63,7 @@ class SpotifyScraper(object):
         user_id = profile['id']
 
         playlists = spot.user_playlists(user=user_id)
-        user_lists = [ yield self.spot_playlist_paginate(playlists, uid) ]
+        user_lists = yield [ self.spot_playlist_paginate(spot, playlists, uid) ]
         spot_data['playlists'] = user_lists
 
         #Get individual playlist by id (Don't think we need)
