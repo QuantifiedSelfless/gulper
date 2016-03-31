@@ -60,6 +60,23 @@ class RedditScraper(object):
     karma_c = me.comment_karma
     karma_l = me.link_karma
 
+    submissions = []
+    for i in me.get_submitted():
+        if count > self.num_scrape:
+            break
+        load = {}
+        load['title'] = i.title
+        load['url'] = i.url
+        load['score'] = i.score
+        load['subreddit'] = i.subreddit.title
+        submissions.append(load)
+        count += 1
+
+    data['submissions'] = submissions
+
+    data['comment_karma'] = karma_c
+    data['link_karma'] = karma_l
+
     likes = []
     count = 0
     for i in me.get_upvoted():
