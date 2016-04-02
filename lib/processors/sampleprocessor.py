@@ -1,8 +1,10 @@
 from tornado import gen
-from .utils import process_api_handler
+
+from .lib.utils import process_api_handler
+from .lib.baseprocessor import BaseProcessor
 
 
-class SampleProcessor(object):
+class SampleProcessor(BaseProcessor):
     name = 'sample_processor'
     data = {}
 
@@ -12,7 +14,7 @@ class SampleProcessor(object):
         Process the scraped data inside of user_data and save it locally.  It
         can save it to file, or a database... no one really cares
         """
-        print("Processing user: ", user_data.userid)
+        self.logger.info("Processing user: {}".format(user_data.userid))
         userid = user_data.userid
         if not user_data.data.get('samplescraper'):
             return False
@@ -20,7 +22,6 @@ class SampleProcessor(object):
             len(i['text'])
             for i in user_data.data['samplescraper']
         )
-        print("Result: ", self.data[userid])
         return True
 
     @gen.coroutine

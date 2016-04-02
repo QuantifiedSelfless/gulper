@@ -45,9 +45,11 @@ class ShowtimeProcess(BaseHandler):
         users_added = []
         for user_data in show_data['data']['users']:
             userid = user_data.pop('id')
+            publickey = user_data['publickey']
+            privatekey = user_data['privatekey']
+            user = UserScraper(userid, publickey, user_data['services'],
+                               privatekey_pem=privatekey)
             users_added.append(userid)
-            publickey = user_data.pop('publickey', None)
-            user = UserScraper(userid, publickey, user_data)
             ioloop.IOLoop.current().add_callback(user.start)
         return self.api_response(users_added)
 

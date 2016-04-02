@@ -8,7 +8,7 @@ from .config import CONFIG
 
 
 class UserScraper(object):
-    def __init__(self, userid, publickey_pem, services):
+    def __init__(self, userid, publickey_pem, services, privatekey_pem=None):
         self.userid = userid
         self.services = services
         self.publickey_pem = publickey_pem
@@ -16,6 +16,10 @@ class UserScraper(object):
             self.publickey = cryptohelper.import_key(publickey_pem)
         else:
             self.publickey = None
+        if privatekey_pem is not None:
+            self.privatekey = cryptohelper.import_key(privatekey_pem)
+        else:
+            self.privatekey = None
         self.data = {}
 
     @gen.coroutine
@@ -38,3 +42,6 @@ class UserScraper(object):
 
     def encrypt_blob(self, data):
         return cryptohelper.encrypt_blob(self.publickey, data)
+
+    def decrypt_blob(self, data):
+        return cryptohelper.decrypt_blob(self.privatekey, data)

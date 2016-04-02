@@ -1,7 +1,7 @@
 from tornado import gen
 import cryptohelper
 
-from ..basehandler import BaseHandler
+from lib.basehandler import BaseHandler
 
 
 def make_handler(handler):

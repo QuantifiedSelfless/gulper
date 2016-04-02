@@ -5,23 +5,42 @@ from nearpy.hashes import RandomBinaryProjections
 import os
 import pickle
 from collections import defaultdict
+import cryptohelper
 
-from .utils import process_api_handler
+from ..config import CONFIG
+from .lib.utils import process_api_handler
+from .lib.baseprocessor import BaseProcessor
 
 
-class Pr0nProcessor(object):
+class Pr0nProcessor(BaseProcessor):
     name = 'pr0n_processor'
     data = {}
 
     def __init__(self):
-        self.pr0n_engine = self.create_engine()
-        self.read_pr0n()
+        super().__init__()
+        try:
+            fname = './data/pr0n/backend.pkl'
+            with open(fname, 'rb') as fd:
+                self.pr0n_engine = pickle.load(fd)
+            self.logger.info("Loaded backend from save state")
+        except (IOError, ValueError):
+            self.logger.info("Recreating backend engine")
+            self.pr0n_engine = self.create_engine()
+            self.read_pr0n()
+            with open(fname, 'wb+') as fd:
+                pickle.dump(self.pr0n_engine, fd)
+
+    def _get_img(self, img_hash):
+        fname = "data/pr0n/backend/{0[0]}/{0[1]}/{0}.pkl".format(img_hash)
+        with open(fname, 'rb') as fd:
+            return pickle.load(fd)
 
     def create_engine(self):
-        rbp = RandomBinaryProjections('rbp', 24)
+        rbp = RandomBinaryProjections('rbp', 10)
         return Engine(128, lshashes=[rbp])
 
     def read_pr0n(self):
+        num_added = 0
         for dirname, _, filenames in os.walk('./data/pr0n/backend/'):
             if filenames:
                 for filename in filenames:
@@ -35,6 +54,11 @@ class Pr0nProcessor(object):
                             continue
                         self.pr0n_engine.store_vector(data['face_hash'],
                                                       filehash)
+                        num_added += 1
+        self.logger.info("Added backend pictures: {}".format(num_added))
+        if not num_added:
+            self.logger.error("PRON: No pictures added... try running "
+                  "./scripts/create_pr0n_database.py")
 
     def filter_photos(self, photos):
         for photo in photos:
@@ -52,7 +76,7 @@ class Pr0nProcessor(object):
         Go through all the tagged facebook pictures from the user and creates a
         nearpy structure for easy similarity lookup
         """
-        print("PR0N: Processing user: ", user_data.userid)
+        self.logger.info("Processing user: {}".format(user_data.userid))
         if not user_data.data.get('fbphotos'):
             return False
         photos = list(self.filter_photos(user_data.data['fbphotos']))
@@ -62,28 +86,72 @@ class Pr0nProcessor(object):
         for photo in photos:
             for face in photo['faces']:
                 for tag in face['tags']:
+                    N = self.pr0n_engine.neighbours(face['face_hash'])
+                    print(N)
+                    closest_pr0ns = [
+                        c[1:]
+                        for c in N[:10]
+                    ]
                     tag_lookup[tag['name']].append({
                         'photo': photo,
                         'face': face,
                         'tag': tag,
+                        'closest_pr0n': closest_pr0ns,
+                        'points': 0,
                     })
+        image_to_name = defaultdict(list)
+        for name, info in tag_lookup.items():
+            for img, dist in info['closest_pr0n']:
+                image_to_name[img].append((name, dist))
         user_engine = self.create_engine()
         for i, (tag, data) in enumerate(tag_lookup.items()):
             for d in data:
                 _id = "{}::{}".format(d['tag']['id'], d['photo']['id'])
                 user_engine.store_vector(d['face']['face_hash'], _id)
-        blob = {'tag_lookup': tag_lookup, 'engine': user_engine}
-        blob_enc = user_data.encrypt_blob(blob)
-        filename = "./data/pr0n/user/{}.enc".format(user_data.userid)
-        with open(filename, 'wb+') as fd:
-            fd.write(blob_enc)
-        print("Saved pr0n data at: ", filename)
+        blob = {
+            'tag_lookup': tag_lookup,
+            'engine': user_engine,
+            'image_to_name': image_to_name
+        }
+        self.save_user(blob, user_data)
+        self.logger.info("Saved pr0n data")
+
+    def save_user(self, blob, user_data):
+        if CONFIG.get('_mode') == 'dev':
+            filename = "./data/pr0n/user/{}.pkl".format(user_data.userid)
+            with open(filename, 'wb+') as fd:
+                pickle.dump(blob, fd)
+        else:
+            blob_enc = user_data.encrypt_blob(blob)
+            filename = "./data/pr0n/user/{}.enc".format(user_data.userid)
+            with open(filename, 'wb+') as fd:
+                fd.write(blob_enc)
+
+    def load_user(self, userid, private_key):
+        if CONFIG.get('_mode') == 'dev':
+            filename = "./data/pr0n/user/{}.pkl".format(userid)
+            with open(filename, 'rb') as fd:
+                return pickle.load(fd)
+        else:
+            filename = "./data/pr0n/user/{}.enc".format(userid)
+            with open(filename, 'rb') as fd:
+                blob = fd.read()
+                return cryptohelper.decrypt_blob(blob, private_key)
+
+    @gen.coroutine
+    def get_sample(self, userid, request, private_key=None):
+        """
+        Gets an image to show to the user
+        """
+        data = self.load_user(userid, private_key)
+
 
     @gen.coroutine
     def set_preference(self, userid, request, private_key=None):
         """
         Sets a users preference for a given photo
         """
+        image_id = request.get_argument("imageid")
         pass
 
     @gen.coroutine
@@ -100,6 +168,7 @@ class Pr0nProcessor(object):
         to exhibits
         """
         return [
+            ('sample', self.get_sample),
             ('preference', self.set_preference),
             ('results', self.get_results),
         ]
