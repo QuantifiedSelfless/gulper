@@ -15,9 +15,9 @@ from .redditscrape import RedditScraper
 
 scrapers = [
     SampleScraper(),
-    YouTubeScraper(),
-    GPhotosScraper(),
-    FBPhotosScraper(),
+    # YouTubeScraper(),
+    # GPhotosScraper(),
+    # FBPhotosScraper(),
     GMailScraper(),
     FBTextScraper(),
     FBLikesScraper(),

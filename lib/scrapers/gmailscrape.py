@@ -3,11 +3,39 @@ from tornado.httpclient import HTTPError
 
 import httplib2
 import base64
-import email
+from email.parser import BytesParser as EmailParser
+from email import policy
 from lib.config import CONFIG
+import random
 
 from apiclient.discovery import build
 from oauth2client import client
+
+
+def equalize_dict(data, max_num):
+    """
+    Quick and dirty code to randomly sample from a dictionary of lists in order
+    to roughly equalize their lengths so that IN TOTAL we have `max_num`
+    elements.
+    NOTE: this will randomly shuffle the values of the data so don't expect it
+    to maintain any oder
+    """
+    max_per_bin = max_num // len(data)
+    to_kill = sum(map(len, data.values())) - max_num
+    while to_kill > 0:
+        for key, values in data.items():
+            if len(values) <= max_per_bin:
+                continue
+            dv = min(to_kill, len(values) - max_per_bin)
+            killing = random.randint(1, int(dv))
+            random.shuffle(values)
+            for i in range(killing):
+                values.pop()
+            to_kill -= killing
+            if to_kill <= 0:
+                break
+    return data
+
 
 class GMailScraper(object):
     name = 'gtext'
@@ -17,7 +45,13 @@ class GMailScraper(object):
         with open('lib/scrapers/snippets.txt', 'r') as fd:
             self.tokens = [s.strip() for s in fd]
 
-    def get_content(raw):
+    @property
+    def num_threads(self):
+        if CONFIG['_mode'] == 'prod':
+            return 1000
+        return 100
+
+    def get_content(self, raw):
         data = base64.urlsafe_b64decode(raw)
         email_parser = EmailParser(policy=policy.default)
         email = email_parser.parsebytes(data)
@@ -29,29 +63,33 @@ class GMailScraper(object):
         email_dict['body'] = body
         return email_dict
 
-
-    def paginate_messages(self, service, response):
-        threads = set()
+    def paginate_messages(self, service, response, max_results=None):
+        threads = []
         if 'messages' in response:
             for i in response['messages']:
-                threads.add(i['threadId'])
+                threads.append(i['threadId'])
 
         while 'nextPageToken' in response:
             page_token = response['nextPageToken']
             response = service.users().messages().list(userId='me',
                     pageToken=page_token).execute()
             for i in response['messages']:
-                threads.add(i['threadId'])
-        return messages
+                threads.append(i['threadId'])
+            if max_results and len(threads) >= max_results:
+                break
+        return threads
 
-    def get_recipient(self, email_data, parsed=False):
-        names = []
-        if parsed == True:
+    def get_recipient(self, email_data):
+        if 'To' in email_data:
             to_field = email_data['To']
         else:
-            headers = email_data['payload']['headers']
+            try:
+                headers = email_data['payload']['headers']
+            except KeyError:
+                return []
             to_field = [d['value'] for d in headers if d['name'] == 'To']
         sent_to = to_field.split(', ')
+        names = []
         for i in sent_to:
             names.append(i[0].split(' <')[0])
         return names
@@ -61,13 +99,9 @@ class GMailScraper(object):
             msg = service.users().messages().get(userId='me', id=email_id, format='raw').execute()
             snip = msg['snippet']
             email = self.get_content(msg['raw'])
-            #msg_str = base64.urlsafe_b64decode(msg['raw'].encode('ASCII'))
-            #mime_msg = email.message_from_string(msg_str)
-            #text = mime_msg.get_payload()[0]
             return email, snip
         except HTTPError as e:
             print("Exception while scraping gmail: ", e)
-
 
     def get_meta_from_id(self, service, email_id):
         try:
@@ -80,10 +114,9 @@ class GMailScraper(object):
         try:
             thr = service.users().threads().get(userId='me', id=thread_id).execute()
             firstm = thr['messages'][0]['id']
-            return self.get_raw_from_id(firstm)
+            return self.get_raw_from_id(service, firstm)
         except HTTPError as e:
             print("Exception while scraping gmail: ", e)
-
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -111,29 +144,35 @@ class GMailScraper(object):
         )
 
         data = {
-            "text" : [],
-            "people" : set(),
-            "snippets" : []
+            "text": [],
+            "people": set(),
+            "snippets": []
         }
 
-        #Set up client
+        # Set up client
         http = creds.authorize(httplib2.Http())
         gmail = build('gmail', 'v1', http=http)
         print("[gmail] Scraping user: ", user_data.userid)
 
-        #Get seed language tokens
+        # Get seed language tokens
+        # Go through each token, seed a search to find threads we want to
+        # search through
+        thread_ids_per_token = {}
+        for token in self.tokens:
+            res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(token)).execute()
+            thread_ids_per_token[token] = self.paginate_messages(
+                gmail,
+                res,
+                max_results=self.num_threads
+            )
 
-        threads = set()
-        #Go through each token, seed a search to find threads we want to search through
-        for toke in self.tokens:
-            res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(toke)).execute()
-            threads.update(self.paginate_messages(gmail, res)) 
-
-        for thread in threads:
+        equalize_dict(thread_ids_per_token, self.num_threads)
+        threads = set(thread for threads in thread_ids_per_token.values()
+                      for thread in threads)
+        for i, thread in enumerate(threads):
             email, snippet = self.get_beg_thread(gmail, thread)
             if email['body'] is not None:
                 data['text'].append(email['body'])
                 data['snippets'].append(snippet)
-            data['people'].update(self.get_recipient(email, parsed=True))
-
-        return data       
+            data['people'].update(self.get_recipient(email))
+        return data

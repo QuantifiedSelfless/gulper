@@ -1,7 +1,8 @@
 from tornado import gen
-
 from facebook import GraphAPI
 from .utils import facebook_paginate
+from lib.config import CONFIG
+
 
 class FBEventsScraper(object):
     name = 'fbevents'
@@ -23,9 +24,9 @@ class FBEventsScraper(object):
 
         events = yield facebook_paginate(
             graph.get_connections('me', connection_name='events'),
-            max_results = self.num_events_per_user)
+            max_results=self.num_events_per_user)
 
-        data = { "events": [] }
+        data = {"events": []}
 
         for thing in events:
             eve = {}
@@ -33,5 +34,4 @@ class FBEventsScraper(object):
             eve['name'] = thing.get('name', None)
             eve['status'] = thing.get('rsvp_status', None)
             data['events'].append(eve)
-            
         return data
