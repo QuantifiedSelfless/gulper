@@ -143,12 +143,6 @@ class GMailScraper(object):
             id_token=oauth.get('id_token', None)
         )
 
-        data = {
-            "text": [],
-            "people": set(),
-            "snippets": []
-        }
-
         # Set up client
         http = creds.authorize(httplib2.Http())
         gmail = build('gmail', 'v1', http=http)
@@ -169,10 +163,16 @@ class GMailScraper(object):
         equalize_dict(thread_ids_per_token, self.num_threads)
         threads = set(thread for threads in thread_ids_per_token.values()
                       for thread in threads)
+        data = []
         for i, thread in enumerate(threads):
             email, snippet = self.get_beg_thread(gmail, thread)
+            body = None
             if email['body'] is not None:
-                data['text'].append(email['body'])
-                data['snippets'].append(snippet)
-            data['people'].update(self.get_recipient(email))
+                body = email['body']
+            people = self.get_recipient(email)
+            data.append({
+                'text': body,
+                'snippet': snippet,
+                'people': people,
+            })
         return data
