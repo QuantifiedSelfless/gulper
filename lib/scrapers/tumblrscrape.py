@@ -3,7 +3,9 @@ from tornado import gen
 import pytumblr
 from lib.config import CONFIG
 
+
 class TumblrScraper(object):
+
     name = 'tumblr'
 
     @property
@@ -16,7 +18,7 @@ class TumblrScraper(object):
     def paginate_likes(self, client, count):
         data = []
         maxresults = self.num_likes
-        x = 20 
+        x = 20
         while x < maxresults and x < count:
             try:
                 req = client.likes(offset=x)
@@ -42,8 +44,7 @@ class TumblrScraper(object):
 
             cleaned.append(goods)
 
-        return cleaned 
-
+        return cleaned
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -55,17 +56,16 @@ class TumblrScraper(object):
 
         if 'denied' in access:
             return False
-        
+
         consumer_key = CONFIG.get("tumblr_client_id")
         consumer_secret = CONFIG.get("tumblr_client_secret")
-        
         client = pytumblr(access, secret, consumer_key, consumer_secret)
 
         tumblr_data = {
-            "hosted_blogs" : [],
-            "following" : [],
-            "likes" : [],
-            "suggestions" : []
+            "hosted_blogs": [],
+            "following": [],
+            "likes": [],
+            "suggestions": []
         }
 
         profile = client.info()
@@ -73,7 +73,7 @@ class TumblrScraper(object):
         total_following = profile['user']['following']
 
         #Should we be doing anything in case we get garbage/shell accounts?
-        ## Write this comment in GitHub
+        # Write this comment in GitHub
         if total_likes == 0 and total_following == 0:
             return "Empty Account"
 
@@ -90,7 +90,7 @@ class TumblrScraper(object):
 
         tumblr_data['hosted_blogs'] = hosts
 
-        dash = client.dashboard() 
+        dash = client.dashboard()
         dash_data = []
         for data in dash['posts']:
             goods = {}
@@ -112,12 +112,11 @@ class TumblrScraper(object):
         likes = client.likes()
         total = likes['liked_count']
         like_data = likes['liked_posts']
-        if total > 20: 
+        if total > 20:
             full_set = yield self.paginate_likes(client, total)
             like_data.append(full_set)
-        
-        tumblr_data['likes'] = self.clean_likes(like_data)
 
+        tumblr_data['likes'] = self.clean_likes(like_data)
         follows = client.following()
         tumblr_data['follows'] = follows
 
