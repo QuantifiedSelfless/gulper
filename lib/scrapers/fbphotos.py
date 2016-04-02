@@ -4,6 +4,7 @@ from facebook import GraphAPI
 from lib.facefinder import find_faces_url
 from lib.config import CONFIG
 from dlib import point
+
 from .utils import facebook_paginate
 
 
@@ -34,8 +35,8 @@ class FBPhotosScraper(object):
         )
         for photo in photos:
             photo['images'].sort(key=lambda x: x['height']*x['width'])
-            image = photo['images'][-1]
-            width, height = image['width'], image['height']
+            image_url = photo['images'][-1]
+            width, height = image_url['width'], image_url['height']
             people = [
                 (
                     point(int(t['x']*width/100.0),
@@ -44,7 +45,7 @@ class FBPhotosScraper(object):
                 )
                 for t in photo['tags']['data']
             ]
-            faces = yield find_faces_url(image['source'])
+            faces = yield find_faces_url(image_url['source'], hash_face=True)
             # go through the faces _we_ found and interpolate those results
             # with the tags from the image
             for face in faces:

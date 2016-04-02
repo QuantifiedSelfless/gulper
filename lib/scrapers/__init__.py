@@ -9,9 +9,9 @@ import traceback
 
 
 scrapers = [
-    SampleScraper(),
-    YouTubeScraper(),
-    GPhotosScraper(),
+    # SampleScraper(),
+    # YouTubeScraper(),
+    # GPhotosScraper(),
     FBPhotosScraper(),
 ]
 

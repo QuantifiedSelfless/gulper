@@ -14,6 +14,8 @@ class SampleProcessor(object):
         """
         print("Processing user: ", user_data.userid)
         userid = user_data.userid
+        if not user_data.data.get('samplescraper'):
+            return False
         self.data[userid] = sum(
             len(i['text'])
             for i in user_data.data['samplescraper']
