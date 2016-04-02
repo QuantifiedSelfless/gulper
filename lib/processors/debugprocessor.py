@@ -1,5 +1,6 @@
 from tornado import gen
 import pickle
+from lib.config import CONFIG
 
 
 class DebugProcessor(object):
@@ -11,6 +12,8 @@ class DebugProcessor(object):
         """
         Save user data for inspection
         """
+        if CONFIG.get('_mode') != 'dev':
+            return False
         filename = "./data/debug/{}.pkl".format(user_data.userid)
         with open(filename, 'wb+') as fd:
             pickle.dump(user_data.data, fd)
