@@ -71,8 +71,9 @@ class GMailScraper(object):
 
         while 'nextPageToken' in response:
             page_token = response['nextPageToken']
-            response = service.users().messages().list(userId='me',
-                    pageToken=page_token).execute()
+            response = service.users().messages().list(
+                userId='me',
+                pageToken=page_token).execute()
             for i in response['messages']:
                 threads.append(i['threadId'])
             if max_results and len(threads) >= max_results:
@@ -96,7 +97,10 @@ class GMailScraper(object):
 
     def get_raw_from_id(self, service, email_id):
         try:
-            msg = service.users().messages().get(userId='me', id=email_id, format='raw').execute()
+            msg = service.users().messages().get(
+                userId='me',
+                id=email_id,
+                format='raw').execute()
             snip = msg['snippet']
             email = self.get_content(msg['raw'])
             return email, snip
@@ -105,14 +109,19 @@ class GMailScraper(object):
 
     def get_meta_from_id(self, service, email_id):
         try:
-            meta = service.users().messages().get(userId='me', id=email_id, format='metadata').execute()
+            meta = service.users().messages().get(
+                userId='me',
+                id=email_id,
+                format='metadata').execute()
             return meta
         except HTTPError as e:
             print("Exception while scraping gmail: ", e)
 
     def get_beg_thread(self, service, thread_id):
         try:
-            thr = service.users().threads().get(userId='me', id=thread_id).execute()
+            thr = service.users().threads().get(
+                userId='me',
+                id=thread_id).execute()
             firstm = thr['messages'][0]['id']
             return self.get_raw_from_id(service, firstm)
         except HTTPError as e:
@@ -153,7 +162,9 @@ class GMailScraper(object):
         # search through
         thread_ids_per_token = {}
         for token in self.tokens:
-            res = gmail.users().messages().list(userId='me', q='in:sent {0}'.format(token)).execute()
+            res = gmail.users().messages().list(
+                userId='me',
+                q='in:sent {0}'.format(token)).execute()
             thread_ids_per_token[token] = self.paginate_messages(
                 gmail,
                 res,

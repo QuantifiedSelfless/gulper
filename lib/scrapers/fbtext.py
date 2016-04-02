@@ -4,6 +4,7 @@ from facebook import GraphAPI
 from lib.config import CONFIG
 from .utils import facebook_paginate
 
+
 class FBTextScraper(object):
     name = 'fbtext'
 
@@ -15,15 +16,13 @@ class FBTextScraper(object):
 
     def message_filter(self, data):
         pfiltered = []
-        lfiltered =[]
+        lfiltered = []
         for i in data:
             if 'message' in i:
                 pfiltered.append(i['message'])
             if 'link' in i:
                 lfiltered.append(i['link'])
         return pfiltered, lfiltered
-
-
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -39,7 +38,6 @@ class FBTextScraper(object):
         }
 
         posts = []
-        
         posts_blob = yield facebook_paginate(
             graph.get_connections(
                 'me',
@@ -50,9 +48,8 @@ class FBTextScraper(object):
         )
         posts, links = self.message_filter(posts_blob)
 
-        #To do comments we'd have to go through the different posts and look
-        #Scraping the person's feed is another option, but we get more garbage that way
-
+        # To do comments we'd have to go through the different posts and look
+        # Scraping the person's feed is another option, but we get more garbage
         data['text'] = posts
         data['links'] = links
         return data

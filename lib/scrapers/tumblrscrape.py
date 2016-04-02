@@ -72,7 +72,7 @@ class TumblrScraper(object):
         total_likes = profile['user']['likes']
         total_following = profile['user']['following']
 
-        #Should we be doing anything in case we get garbage/shell accounts?
+        # Should we be doing anything in case we get garbage/shell accounts?
         # Write this comment in GitHub
         if total_likes == 0 and total_following == 0:
             return "Empty Account"

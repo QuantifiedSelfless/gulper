@@ -24,7 +24,10 @@ class RedditScraper(object):
         client_secret = CONFIG.get("reddit_client_secret")
 
         r = praw.Reddit(user_agent="QS-agent/1.0")
-        r.set_oauth_app_info(client_id=client_id, client_secret=client_secret, redirect_uri="https://iamadatapoint.com/auth/reddit")
+        r.set_oauth_app_info(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri="https://iamadatapoint.com/auth/reddit")
         r.set_access_credentials(**tokens)
 
         data = {}

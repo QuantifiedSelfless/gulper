@@ -43,7 +43,3 @@ if __name__ == '__main__':
     tokens = json.loads(data)
     FBLikesScraper()
     print(FBLikesScraper.scrape())
-
-
-
-    
