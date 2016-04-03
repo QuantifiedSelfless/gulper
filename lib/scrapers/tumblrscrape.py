@@ -34,13 +34,13 @@ class TumblrScraper(object):
 
         for i in data:
             goods = {}
-            goods['source_title'] = data.get('source_title', None)
-            goods['post_url'] = data.get('post_url', None)
-            goods['date'] = data.get('date', None)
-            goods['summary'] = data.get('summary', None)
-            goods['photos'] = data.get('photos', None)
-            goods['blog_name'] = data.get('blog_name', None)
-            goods['content'] = data.get('content', None)
+            goods['source_title'] = i.get('source_title', None)
+            goods['post_url'] = i.get('post_url', None)
+            goods['date'] = i.get('date', None)
+            goods['summary'] = i.get('summary', None)
+            goods['photos'] = i.get('photos', None)
+            goods['blog_name'] = i.get('blog_name', None)
+            goods['content'] = i.get('content', None)
 
             cleaned.append(goods)
 
@@ -59,15 +59,13 @@ class TumblrScraper(object):
 
         consumer_key = CONFIG.get("tumblr_client_id")
         consumer_secret = CONFIG.get("tumblr_client_secret")
-        client = pytumblr(access, secret, consumer_key, consumer_secret)
-
+        client = pytumblr.TumblrRestClient(consumer_key, consumer_secret, access, secret)
         tumblr_data = {
             "hosted_blogs": [],
             "following": [],
             "likes": [],
             "suggestions": []
         }
-
         profile = client.info()
         total_likes = profile['user']['likes']
         total_following = profile['user']['following']
@@ -119,5 +117,4 @@ class TumblrScraper(object):
         tumblr_data['likes'] = self.clean_likes(like_data)
         follows = client.following()
         tumblr_data['follows'] = follows
-
         return tumblr_data
