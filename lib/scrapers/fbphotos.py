@@ -15,7 +15,7 @@ class FBPhotosScraper(object):
     def num_images_per_user(self):
         if CONFIG['_mode'] == 'prod':
             return 1000
-        return 100
+        return 250
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -24,16 +24,45 @@ class FBPhotosScraper(object):
         except KeyError:
             return False
         graph = GraphAPI(access_token=oauth)
-        print("[fbphotos] Scraping user: ", user_data.userid)
-        photos = yield facebook_paginate(
+        photos_me = yield facebook_paginate(
             graph.get_connections(
                 'me',
                 'photos',
-                fields='picture,images,tags.limit(50),name,place'
+                fields='images,tags.limit(50)'
             ),
             max_results=self.num_images_per_user
         )
+        photos_uploaded = yield facebook_paginate(
+            graph.get_connections(
+                'me',
+                'photos',
+                fields='images,tags.limit(50)',
+                type='uploaded'
+            ),
+            max_results=self.num_images_per_user
+        )
+        photos_friends_raw = yield facebook_paginate(
+            graph.get_connections(
+                'me',
+                'friends',
+                fields='photos.limit(1){tags.limit(100),images}'
+            ),
+            max_results=self.num_images_per_user
+        )
+        photos_friends = [photo
+                          for d in photos_friends_raw
+                          for photo in d['photos']['data']]
+        photos_me = yield self.parse_photos(graph, photos_me)
+        photos_uploaded = yield self.parse_photos(graph, photos_uploaded)
+        photos_friends = yield self.parse_photos(graph, photos_friends)
+        return {'me': photos_me, 'friends': photos_friends,
+                'uploaded': photos_uploaded}
+
+    @gen.coroutine
+    def parse_photos(self, graph, photos):
         for photo in photos:
+            if 'tags' not in photo:
+                continue
             photo['images'].sort(key=lambda x: x['height']*x['width'])
             image_url = photo['images'][-1]
             width, height = image_url['width'], image_url['height']

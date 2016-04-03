@@ -4,8 +4,9 @@ from nearpy import Engine
 from nearpy.hashes import RandomBinaryProjections
 import os
 import pickle
-from collections import defaultdict
-import cryptohelper
+import itertools as IT
+from collections import Counter
+from operator import itemgetter
 
 from ..config import CONFIG
 from .lib.utils import process_api_handler
@@ -36,7 +37,7 @@ class Pr0nProcessor(BaseProcessor):
             return pickle.load(fd)
 
     def create_engine(self):
-        rbp = RandomBinaryProjections('rbp', 10)
+        rbp = RandomBinaryProjections('rbp', 8)
         return Engine(128, lshashes=[rbp])
 
     def read_pr0n(self):
@@ -58,7 +59,7 @@ class Pr0nProcessor(BaseProcessor):
         self.logger.info("Added backend pictures: {}".format(num_added))
         if not num_added:
             self.logger.error("PRON: No pictures added... try running "
-                  "./scripts/create_pr0n_database.py")
+                              "./scripts/create_pr0n_database.py")
 
     def filter_photos(self, photos):
         for photo in photos:
@@ -66,7 +67,8 @@ class Pr0nProcessor(BaseProcessor):
                 continue
             elif not any(f.get('pose') == 0 for f in photo['faces']):
                 continue
-            elif not any(f.get('face_hash', None) is not None for f in photo['faces']):
+            elif not any(f.get('face_hash', None) is not None
+                         for f in photo['faces']):
                 continue
             yield photo
 
@@ -79,7 +81,20 @@ class Pr0nProcessor(BaseProcessor):
         self.logger.info("Processing user: {}".format(user_data.userid))
         if not user_data.data.get('fbphotos'):
             return False
-        photos = list(self.filter_photos(user_data.data['fbphotos']))
+        photos_me_and_friends = IT.chain.from_iterable(
+            user_data.data['fbphotos'].values()
+        )
+        # NOTE: is there a better way to figure out the name of the current
+        # user within the facebook tagging universe?  i assume one of the other
+        # facebook scrapers is going to extract that information somewhere and
+        # we'll be able to use it here instead of doing this crazy tag counting
+        me_candidates = Counter(t['name']
+                                for photo in user_data.data['fbphotos']['me']
+                                for face in photo['faces']
+                                for t in face['tags'])
+        me, _ = me_candidates.most_common(1)[0]
+
+        photos = list(self.filter_photos(photos_me_and_friends))
         if not photos:
             return False
         names_to_scores = {}
@@ -87,14 +102,24 @@ class Pr0nProcessor(BaseProcessor):
         user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
+                # skip photos with no facebook tags
                 if not face['tags']:
                     continue
+                # skip photos where the person isn't looking straight at the
+                # camera (zero is the subclassifier index in dlib for that)
+                # if face['pose'] != 0:
+                    # continue
                 N = self.pr0n_engine.neighbours(face['face_hash'])
                 closest_pr0ns = [
                     c
                     for c in N[:10]
+                    if c[-1] < 0.75
                 ]
+                if not closest_pr0ns:
+                    continue
                 for tag in face['tags']:
+                    if tag['name'] == me or tag.get('id') is None:
+                        continue
                     _id = "{}::{}".format(tag['name'], photo['id'])
                     user_engine.store_vector(face['face_hash'], _id)
                 for img_hash, img, distance in closest_pr0ns:
@@ -105,6 +130,8 @@ class Pr0nProcessor(BaseProcessor):
                     }
                     for tag in face['tags']:
                         name = tag['name']
+                        if name == me or tag.get('id') is None:
+                            continue
                         if name not in names_to_scores:
                             names_to_scores[name] = {
                                 'scores': {'similar': 0, 'name': 0},
@@ -163,13 +190,15 @@ class Pr0nProcessor(BaseProcessor):
             # this score is arbitrary... i figured something that would single
             # out images related to names that we don't have much information
             # about and weight the name contributions by how similar the name
-            # is to the image.  We also take the absolute value since we only
-            # care about the magnitude (ie: a zero value should be the smallest
-            # 'score' and should signify we have no data on that name
-            score = sum(dist*sum(names_data[name]['scores'].values())
+            # is to the image.
+            norm = sum(dist for dist in d['names'].values())
+            score = sum(dist * (names_data[name]['scores']['name'] +
+                                names_data[name]['scores']['similar'] +
+                                dist)
                         for name, dist in d['names'].items())
+            score /= float(norm)
             if 0 <= score < pick_score:
-                pick_id, pick_score = img, pick_score
+                pick_id, pick_score = img, score
         # no pick id? then the client should show results
         if pick_id is None:
             return {'url': None, 'id': None}
@@ -189,15 +218,18 @@ class Pr0nProcessor(BaseProcessor):
         names_data = data['names_to_scores']
 
         # increase the direct preference
-        images_data[image_id]['scores']['direct'] += 1
+        images_data[image_id]['scores']['direct'] += preference
         # increase all images that have the same person in them
         for name, dist in images_data[image_id]['names'].items():
+            dist = float(dist)
             names_data[name]['scores']['name'] += preference / dist
             names_data[name]['normalization']['name'] += 1.0 / dist
         # increase all images that are similar
         image_hash = images_data[image_id]['image_hash']
         for _, similar, dist in data['engine'].neighbours(image_hash):
-            name = similar.split("::", 1)[0]
+            name, _ = similar.split("::", 1)
+            print("similar: ", name, dist)
+            dist = float(dist)
             names_data[name]['scores']['similar'] += preference / dist
             names_data[name]['normalization']['similar'] += 1.0 / dist
         self.save_user(data, user)
@@ -205,9 +237,19 @@ class Pr0nProcessor(BaseProcessor):
     @gen.coroutine
     def get_results(self, user, request):
         """
-        Gets the results for a particular user
+        Gets the results for a particular user.  Right now this is a simple
+        metric... but it seems to be good enough.
         """
-        pass
+        data = self.load_user(user)
+        scores = []
+        for name, data in data['names_to_scores'].items():
+            name_score = data['scores']['name'] / data['normalization']['name']
+            similarity_score = data['scores']['similar'] /  \
+                data['normalization']['similar']
+            score = name_score + 0.5 * similarity_score
+            scores.append((name, score))
+        sorted(scores, reverse=True, key=itemgetter(1))
+        return scores
 
     @process_api_handler
     def register_handlers(self):

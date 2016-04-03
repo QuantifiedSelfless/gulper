@@ -19,6 +19,7 @@ def apiclient_paginate(resource, action, params, http=None, max_results=500):
         yield from items
         request = resource.list_next(request, data)
 
+
 @gen.coroutine
 def facebook_paginate(data, max_results=500):
     paginated_data = []
