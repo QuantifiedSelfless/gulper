@@ -30,7 +30,7 @@ scrapers = [
 
 @gen.coroutine
 def scrape(user_data):
-    data = {}yield {s.name: s.scrape(user_data) for s in scrapers}
+    data = {}
     for scraper in scrapers:
         try:
             data[scraper.name] = yield scraper.scrape(user_data)
