@@ -87,6 +87,8 @@ class Pr0nProcessor(BaseProcessor):
         user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
+                if not face['tags']:
+                    continue
                 N = self.pr0n_engine.neighbours(face['face_hash'])
                 closest_pr0ns = [
                     c
@@ -164,9 +166,9 @@ class Pr0nProcessor(BaseProcessor):
             # is to the image.  We also take the absolute value since we only
             # care about the magnitude (ie: a zero value should be the smallest
             # 'score' and should signify we have no data on that name
-            score = sum(dist*abs(sum(names_data[name]['scores'].values()))
+            score = sum(dist*sum(names_data[name]['scores'].values())
                         for name, dist in d['names'].items())
-            if score < pick_score:
+            if 0 <= score < pick_score:
                 pick_id, pick_score = img, pick_score
         # no pick id? then the client should show results
         if pick_id is None:
@@ -195,8 +197,8 @@ class Pr0nProcessor(BaseProcessor):
         # increase all images that are similar
         image_hash = images_data[image_id]['image_hash']
         for _, similar, dist in data['engine'].neighbours(image_hash):
-            name = similar.split(":::", 1)[0]
-            names_data[name]['scores']['similar'] += preference/ dist
+            name = similar.split("::", 1)[0]
+            names_data[name]['scores']['similar'] += preference / dist
             names_data[name]['normalization']['similar'] += 1.0 / dist
         self.save_user(data, user)
 
