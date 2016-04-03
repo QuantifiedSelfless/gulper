@@ -87,9 +87,8 @@ class Pr0nProcessor(BaseProcessor):
             for face in photo['faces']:
                 for tag in face['tags']:
                     N = self.pr0n_engine.neighbours(face['face_hash'])
-                    print(N)
                     closest_pr0ns = [
-                        c[1:]
+                        c
                         for c in N[:10]
                     ]
                     tag_lookup[tag['name']].append({
@@ -100,13 +99,22 @@ class Pr0nProcessor(BaseProcessor):
                         'points': 0,
                     })
         image_to_name = defaultdict(list)
-        for name, info in tag_lookup.items():
-            for img, dist in info['closest_pr0n']:
-                image_to_name[img].append((name, dist))
+        for name, infos in tag_lookup.items():
+            for info in infos:
+                for imghash, img, dist in info['closest_pr0n']:
+                    if img not in image_to_name:
+                        image_to_name[img].append({
+                            'names_dist': {},
+                            'distance': dist,
+                            'image_hash': imghash,
+                            'scores': {'direct': 0, 'byname': 0, 'similar': 0},
+                            'normalization': {'byname': 0, 'similar': 0}
+                        })
+                    image_to_name[img]['names_dist'][name] = dist
         user_engine = self.create_engine()
         for i, (tag, data) in enumerate(tag_lookup.items()):
             for d in data:
-                _id = "{}::{}".format(d['tag']['id'], d['photo']['id'])
+                _id = "{}::{}".format(d['tag']['name'], d['photo']['id'])
                 user_engine.store_vector(d['face']['face_hash'], _id)
         blob = {
             'tag_lookup': tag_lookup,
@@ -127,35 +135,72 @@ class Pr0nProcessor(BaseProcessor):
             with open(filename, 'wb+') as fd:
                 fd.write(blob_enc)
 
-    def load_user(self, userid, private_key):
+    def load_user(self, user):
         if CONFIG.get('_mode') == 'dev':
-            filename = "./data/pr0n/user/{}.pkl".format(userid)
+            filename = "./data/pr0n/user/{}.pkl".format(user.userid)
             with open(filename, 'rb') as fd:
                 return pickle.load(fd)
         else:
-            filename = "./data/pr0n/user/{}.enc".format(userid)
+            filename = "./data/pr0n/user/{}.enc".format(user.userid)
             with open(filename, 'rb') as fd:
                 blob = fd.read()
-                return cryptohelper.decrypt_blob(blob, private_key)
+                return user.decrypt_blob(blob)
 
     @gen.coroutine
-    def get_sample(self, userid, request, private_key=None):
+    def get_sample(self, user, request):
         """
         Gets an image to show to the user
         """
-        data = self.load_user(userid, private_key)
-
+        data = self.load_user(user)
+        images = data['image_to_name']
+        # filter images the user hasn't seen yet
+        candidates = [
+            (img, d['scores'])
+            for img, d in images.items()
+            if d['scores']['direct'] == 0
+        ]
+        # find the image we have the least amount of data on
+        pick_id, pick_score = None, 1e8
+        for img, d in images.items():
+            score = abs(sum(d['scores'].values()))
+            if score < pick_score:
+                pick_id, pick_score = img, pick_score
+        # no pick id? then the client should show results
+        if pick_id is None:
+            return {'url': None, 'id': None}
+        pick_data = self._get_img(pick_id)
+        return {'url': pick_data['url'], 'id': pick_id}
 
     @gen.coroutine
-    def set_preference(self, userid, request, private_key=None):
+    def set_preference(self, user, request):
         """
         Sets a users preference for a given photo
         """
-        image_id = request.get_argument("imageid")
-        pass
+        image_id = request.get_argument("id")
+        preference = int(request.get_argument("preference"))
+        data = self.load_user(user)
+        images = data['image_to_name']
+        for d in images[image_id]:
+            d['scores']['direct'] += preference
+        # increase all images that have the same person in them
+        names = set(images[image_id]['names_dist'].keys())
+        for image, d in images:
+            if image != image_id and d['name'] in names:
+                d['scores']['name'] += preference
+                d['normalization']['name'] += 1
+        # increase all images that are similar
+        image_hash = images[image_id]['image_hash']
+        for _, similar, dist in data['engine'].neighbours(image_hash):
+            similar_name = similar.split(":::", 1)[0]
+            for image, datas in images:
+                for d in datas:
+                    if similar_name == d['name']:
+                        d['scores']['similar'] += preference / dist
+                        d['normalization']['similar'] += 1.0 / dist
+        self.save_user(data, user)
 
     @gen.coroutine
-    def get_results(self, userid, request, private_key=None):
+    def get_results(self, user, request):
         """
         Gets the results for a particular user
         """
@@ -172,4 +217,3 @@ class Pr0nProcessor(BaseProcessor):
             ('preference', self.set_preference),
             ('results', self.get_results),
         ]
-

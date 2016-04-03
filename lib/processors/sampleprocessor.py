@@ -25,11 +25,11 @@ class SampleProcessor(BaseProcessor):
         return True
 
     @gen.coroutine
-    def num_characters(self, userid, request, private_key=None):
+    def num_characters(self, user, request):
         """
         Returns relevant data that the exhibits may want to know
         """
-        return self.data.get(userid, 'userid not found')
+        return self.data.get(user.userid, 'userid not found')
 
     @process_api_handler
     def register_handlers(self):
