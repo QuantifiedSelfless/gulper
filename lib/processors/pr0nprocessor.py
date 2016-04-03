@@ -82,44 +82,39 @@ class Pr0nProcessor(BaseProcessor):
         photos = list(self.filter_photos(user_data.data['fbphotos']))
         if not photos:
             return False
-        tag_lookup = defaultdict(list)
+        names_to_scores = {}
+        images_to_scores = {}
+        user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
+                N = self.pr0n_engine.neighbours(face['face_hash'])
+                closest_pr0ns = [
+                    c
+                    for c in N[:10]
+                ]
                 for tag in face['tags']:
-                    N = self.pr0n_engine.neighbours(face['face_hash'])
-                    closest_pr0ns = [
-                        c
-                        for c in N[:10]
-                    ]
-                    tag_lookup[tag['name']].append({
-                        'photo': photo,
-                        'face': face,
-                        'tag': tag,
-                        'closest_pr0n': closest_pr0ns,
-                        'points': 0,
-                    })
-        image_to_name = defaultdict(list)
-        for name, infos in tag_lookup.items():
-            for info in infos:
-                for imghash, img, dist in info['closest_pr0n']:
-                    if img not in image_to_name:
-                        image_to_name[img].append({
-                            'names_dist': {},
-                            'distance': dist,
-                            'image_hash': imghash,
-                            'scores': {'direct': 0, 'byname': 0, 'similar': 0},
-                            'normalization': {'byname': 0, 'similar': 0}
-                        })
-                    image_to_name[img]['names_dist'][name] = dist
-        user_engine = self.create_engine()
-        for i, (tag, data) in enumerate(tag_lookup.items()):
-            for d in data:
-                _id = "{}::{}".format(d['tag']['name'], d['photo']['id'])
-                user_engine.store_vector(d['face']['face_hash'], _id)
+                    _id = "{}::{}".format(tag['name'], photo['id'])
+                    user_engine.store_vector(face['face_hash'], _id)
+                for img_hash, img, distance in closest_pr0ns:
+                    images_to_scores[img] = {
+                        'scores': {'direct': 0},
+                        'names': {},
+                        'image_hash': img_hash,
+                    }
+                    for tag in face['tags']:
+                        name = tag['name']
+                        if name not in names_to_scores:
+                            names_to_scores[name] = {
+                                'scores': {'similar': 0, 'name': 0},
+                                'normalization': {'similar': 0, 'name': 0},
+                                'images': {},
+                            }
+                        names_to_scores[name]['images'][img] = distance
+                        images_to_scores[img]['names'][name] = distance
         blob = {
-            'tag_lookup': tag_lookup,
+            'names_to_scores': names_to_scores,
+            'images_to_scores': images_to_scores,
             'engine': user_engine,
-            'image_to_name': image_to_name
         }
         self.save_user(blob, user_data)
         self.logger.info("Saved pr0n data")
@@ -152,24 +147,33 @@ class Pr0nProcessor(BaseProcessor):
         Gets an image to show to the user
         """
         data = self.load_user(user)
-        images = data['image_to_name']
+        images_data = data['images_to_scores']
+        names_data = data['names_to_scores']
         # filter images the user hasn't seen yet
         candidates = [
-            (img, d['scores'])
-            for img, d in images.items()
+            (img, d)
+            for img, d in images_data.items()
             if d['scores']['direct'] == 0
         ]
         # find the image we have the least amount of data on
         pick_id, pick_score = None, 1e8
-        for img, d in images.items():
-            score = abs(sum(d['scores'].values()))
+        for img, d in candidates:
+            # this score is arbitrary... i figured something that would single
+            # out images related to names that we don't have much information
+            # about and weight the name contributions by how similar the name
+            # is to the image.  We also take the absolute value since we only
+            # care about the magnitude (ie: a zero value should be the smallest
+            # 'score' and should signify we have no data on that name
+            score = sum(dist*abs(sum(names_data[name]['scores'].values()))
+                        for name, dist in d['names'].items())
             if score < pick_score:
                 pick_id, pick_score = img, pick_score
         # no pick id? then the client should show results
         if pick_id is None:
             return {'url': None, 'id': None}
         pick_data = self._get_img(pick_id)
-        return {'url': pick_data['url'], 'id': pick_id}
+        return {'url': pick_data['url'], 'id': pick_id,
+                'names': images_data[pick_id]['names']}
 
     @gen.coroutine
     def set_preference(self, user, request):
@@ -179,24 +183,21 @@ class Pr0nProcessor(BaseProcessor):
         image_id = request.get_argument("id")
         preference = int(request.get_argument("preference"))
         data = self.load_user(user)
-        images = data['image_to_name']
-        for d in images[image_id]:
-            d['scores']['direct'] += preference
+        images_data = data['images_to_scores']
+        names_data = data['names_to_scores']
+
+        # increase the direct preference
+        images_data[image_id]['scores']['direct'] += 1
         # increase all images that have the same person in them
-        names = set(images[image_id]['names_dist'].keys())
-        for image, d in images:
-            if image != image_id and d['name'] in names:
-                d['scores']['name'] += preference
-                d['normalization']['name'] += 1
+        for name, dist in images_data[image_id]['names'].items():
+            names_data[name]['scores']['name'] += preference / dist
+            names_data[name]['normalization']['name'] += 1.0 / dist
         # increase all images that are similar
-        image_hash = images[image_id]['image_hash']
+        image_hash = images_data[image_id]['image_hash']
         for _, similar, dist in data['engine'].neighbours(image_hash):
-            similar_name = similar.split(":::", 1)[0]
-            for image, datas in images:
-                for d in datas:
-                    if similar_name == d['name']:
-                        d['scores']['similar'] += preference / dist
-                        d['normalization']['similar'] += 1.0 / dist
+            name = similar.split(":::", 1)[0]
+            names_data[name]['scores']['similar'] += preference/ dist
+            names_data[name]['normalization']['similar'] += 1.0 / dist
         self.save_user(data, user)
 
     @gen.coroutine
