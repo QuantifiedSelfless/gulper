@@ -1,6 +1,6 @@
 {
     'fblikes': ['like1', ], //array of the names of things the user liked on facebook
-    'fbprofiles': {
+    'fbprofile': {
         'birthday' :
         'bio' :
         'education' : {
@@ -21,13 +21,13 @@
         }
     }
 
-    'gmailscrape' : [{
+    'gtext' : [{
         'text' :
         'snippet' :
         'people' : 
     }, ] //array of emails with text as the email's text, the snippet is a synapsis of the email and the people are the emails involved
 
-    'redditscrape' : {
+    'reddit' : {
         'subs' : {
             'name' :
             'url' :
@@ -59,7 +59,7 @@
             'count' :
         }
     
-    'tumblrscrape' : {
+    'tumblr' : {
         'source_title' :
         'post_url' :
         'date' :
@@ -107,7 +107,7 @@
     }
     'twitter' : {
     }
-    'fbphoto' : [{
+    'fbphotos' : [{
         'photo' : {
             'image' : {
                 'width' : 
@@ -115,12 +115,20 @@
                 'tags' :
                 'data'  :
             }
-            'faces' : [, ]
-    }
+        },
+        'faces' : [, ]
+    }],
     'gphotos' : {
         'photos' : {
             'faces' :
         }
+    },
+    'youtube' : {
+        "subscriptions" : ,
+        "playlists" : ,
+        "userinfo" : ,
+        "special_videos" : 
     }
+    
 }
               
