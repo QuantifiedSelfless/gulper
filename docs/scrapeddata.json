@@ -1,6 +1,9 @@
 {
     'fblikes': ['like1', ], //array of the names of things the user liked on facebook
-    'fbprofile': {
+    
+    *------------------------*    
+    
+    'fbprofile': { //basic profile information
         'birthday' :
         'bio' :
         'education' : {
@@ -21,13 +24,17 @@
         }
     }
 
-    'gtext' : [{
+    *------------------------*    
+
+    'gtext' : [{ //array of emails with text as the email's text, the snippet is a synapsis of the email and the people are the emails involved
         'text' :
         'snippet' :
         'people' : 
-    }, ] //array of emails with text as the email's text, the snippet is a synapsis of the email and the people are the emails involved
+    }, ]
+ 
+    *------------------------*    
 
-    'reddit' : {
+    'reddit' : { 
         'subs' : {
             'name' :
             'url' :
@@ -58,7 +65,10 @@
             'url' :
             'count' :
         }
+    }     
     
+    *------------------------*    
+
     'tumblr' : {
         'source_title' :
         'post_url' :
@@ -70,7 +80,10 @@
         'likes' :
         'posts' :
     }
-    'spotifyscrape' : {
+
+    *------------------------*    
+    
+    'spotify' : {
         'artists' : [{
             'id' :
             'name' :
@@ -89,11 +102,17 @@
             'owner' :
         }, ]
     }
+
+    *------------------------*    
+
     'fbevents' : [{
         'description' :
         'name' :
         'status' :
     }, ]
+
+    *------------------------*    
+
     'gphotos' : {
         'photos' : {
             'photo' : {
@@ -101,12 +120,21 @@
             }
         }
     }
+
+    *------------------------*    
+
     'fbtext' : {
         'text' :
         'links' :
     }
+
+    *------------------------*    
+
     'twitter' : {
     }
+
+    *------------------------*    
+
     'fbphotos' : [{
         'photo' : {
             'image' : {
@@ -118,11 +146,17 @@
         },
         'faces' : [, ]
     }],
+
+    *------------------------*    
+
     'gphotos' : {
         'photos' : {
             'faces' :
         }
     },
+
+    *------------------------*    
+
     'youtube' : {
         "subscriptions" : ,
         "playlists" : ,
