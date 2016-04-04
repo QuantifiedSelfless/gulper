@@ -15,9 +15,9 @@ from .redditscrape import RedditScraper
 
 scrapers = [
     SampleScraper(),
-    # YouTubeScraper(),
-    # GPhotosScraper(),
-    # FBPhotosScraper(),
+    YouTubeScraper(),
+    GPhotosScraper(),
+    FBPhotosScraper(),
     GMailScraper(),
     FBTextScraper(),
     FBLikesScraper(),
@@ -30,7 +30,14 @@ scrapers = [
 
 @gen.coroutine
 def scrape(user_data):
-    data = yield {s.name: s.scrape(user_data) for s in scrapers}
+    data = {}
+    for scraper in scrapers:
+        try:
+            data[scraper.name] = yield scraper.scrape(user_data)
+        except Exception as ex:
+            print("Scraper '{0}' failed to populate data for user with id {1}".format(scraper.name, user_data.userid))
+            print(ex)
+            continue
     #DELETE THIS LATER
     print(data)
     return data

@@ -56,6 +56,7 @@ class SpotifyScraper(object):
         except KeyError:
             return False
 
+        # Before authentication, refresh the token
         spot = spotipy.Spotify(auth=oauth)
 
         spot_data = {}

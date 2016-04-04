@@ -40,7 +40,7 @@ class YouTubeScraper(object):
             youtube = build('youtube', 'v3', http=http)
         except:
             print("This user's account doesn't have youtube")
-            
+
         print("[youtube] Scraping user: ", user_data.userid)
 
         userinfo = list(apiclient_paginate(youtube.channels(), 'list', {
@@ -51,11 +51,18 @@ class YouTubeScraper(object):
         special_videos = {}
         user_special_playlists = userinfo['contentDetails']['relatedPlaylists']
         for name, playlistid in user_special_playlists.items():
-            videos = list(apiclient_paginate(youtube.playlistItems(), 'list', {
-                'part': 'snippet',
-                'playlistId': playlistid,
-            }, max_results=self.num_videos_per_playlist))
-            special_videos[name] = videos
+            try:
+                videos = list(
+                    apiclient_paginate(youtube.playlistItems(),
+                    'list',
+                    {
+                        'part': 'snippet',
+                        'playlistId': playlistid,
+                    }, max_results=self.num_videos_per_playlist))
+                special_videos[name] = videos
+            except Exception as e:
+                print("Error fetching from Youtube API: {0}".format(e))
+                continue
 
         playlists = list(apiclient_paginate(youtube.playlists(), 'list', {
             'part': 'id,snippet',
