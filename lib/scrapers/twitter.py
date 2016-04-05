@@ -11,7 +11,7 @@ class TwitterScraper(object):
     def num_scrape(self):
         if CONFIG['_mode'] == 'prod':
             return 1000
-        return 100
+        return 10
 
     @gen.coroutine
     def all_following(self, api, follow_list):
@@ -36,6 +36,7 @@ class TwitterScraper(object):
         res = favs
         while count < self.num_scrape and len(res) > 0:
             for fav in res:
+                print(fav.text)
                 data.append(fav.text)
                 count += 1
             max_id = res.max_id
@@ -61,21 +62,22 @@ class TwitterScraper(object):
         print("Scraping user: ", user_data.userid)
         try:
             twitter_creds = user_data.services['twitter']
+            print(twitter_creds)
         except:
             return False
         if 'denied' in twitter_creds:
             return False
 
+        print(CONFIG.get('twitter_client_id'))
+        print(CONFIG.get('twitter_client_secret'))
+        client_key = CONFIG.get('twitter_client_id')
+        client_secret = CONFIG.get('twitter_client_secret')
         auth = tweepy.OAuthHandler(
-            CONFIG.get('twitter_client_key'),
-            CONFIG.get('twitter_client_secret')
+                client_key,
+                client_secret
         )
-        auth.secure = True
-        auth.set_access_token(
-            # these dictionary keys may be wrong
-            twitter_creds['access_token'],
-            twitter_creds['access_token_secret']
-        )
+        auth.access_token = twitter_creds['access_token']
+        auth.access_token_secret = twitter_creds['access_token_secret']
         api = tweepy.API(auth)
 
         data = {}
@@ -90,12 +92,12 @@ class TwitterScraper(object):
         data["profile"] = profile_data
 
         following = api.friends_ids()
-        data["following"] = self.all_following(api, following)
+        data["following"] = yield self.all_following(api, following)
 
         favs = api.favorites()
-        data['favorites'] = self.all_favs(api, favs)
+        data['favorites'] = yield self.all_favs(api, favs)
 
         tweets = api.user_timeline()
-        data['tweets'] = self.all_tweets(api, me.statuses_count, tweets)
+        data['tweets'] = yield self.all_tweets(api, me.statuses_count, tweets)
 
         return data
