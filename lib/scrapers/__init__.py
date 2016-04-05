@@ -17,15 +17,15 @@ import ujson as json
 
 scrapers = [
 #    SampleScraper(),
-#    YouTubeScraper(),
-#    GPhotosScraper(),
-#    FBPhotosScraper(),
-#    GMailScraper(),
-#    FBTextScraper(),
-#    FBLikesScraper(),
-#    FBEventsScraper(),
-#    TumblrScraper(),
-#    RedditScraper(),
+    YouTubeScraper(),
+    GPhotosScraper(),
+    FBPhotosScraper(),
+    GMailScraper(),
+    FBTextScraper(),
+    FBLikesScraper(),
+    FBEventsScraper(),
+    TumblrScraper(),
+    RedditScraper(),
 #    SpotifyScraper(),
     TwitterScraper()
 ]
