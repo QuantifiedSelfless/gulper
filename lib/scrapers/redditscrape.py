@@ -20,14 +20,15 @@ class RedditScraper(object):
             return False
         if 'denied' in tokens:
             return False
-        client_id = CONFIG.get("reddit_client_id"),
+        client_id = CONFIG.get("reddit_client_id")
         client_secret = CONFIG.get("reddit_client_secret")
 
         r = praw.Reddit(user_agent="QS-agent/1.0")
         r.set_oauth_app_info(
             client_id=client_id,
             client_secret=client_secret,
-            redirect_uri="https://iamadatapoint.com/auth/reddit")
+            redirect_uri="http://iamadatapoint.com:8085/auth/reddit")
+        tokens = r.refresh_access_information(refresh_token = tokens['refresh_token'])
         r.set_access_credentials(**tokens)
 
         data = {}
@@ -50,9 +51,11 @@ class RedditScraper(object):
         for i in r.get_inbox():
             if count > self.num_scrape:
                 break
+            print(i)
             load = {}
             load['body'] = i.body
-            load['author'] = i.author.name
+            if i.author:
+                load['author'] = i.author.name
             load['comment'] = i.was_comment
             msgs.append(load)
             count += 1

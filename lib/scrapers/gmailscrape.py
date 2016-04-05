@@ -92,7 +92,9 @@ class GMailScraper(object):
         sent_to = to_field.split(', ')
         names = []
         for i in sent_to:
-            names.append(i[0].split(' <')[0])
+            print(i)
+            thing = (i.split(' <')[0])
+            names.append(thing)
         return names
 
     def get_raw_from_id(self, service, email_id):
@@ -174,16 +176,16 @@ class GMailScraper(object):
         equalize_dict(thread_ids_per_token, self.num_threads)
         threads = set(thread for threads in thread_ids_per_token.values()
                       for thread in threads)
-        data = []
+        data = { "text" : [],
+                 "snippets" : [],
+                 "people" : [] }
         for i, thread in enumerate(threads):
             email, snippet = self.get_beg_thread(gmail, thread)
             body = None
             if email['body'] is not None:
                 body = email['body']
             people = self.get_recipient(email)
-            data.append({
-                'text': body,
-                'snippet': snippet,
-                'people': people,
-            })
+            data['text'].append(body)
+            data['snippets'].append(snippet)
+            data['people'].append(people)
         return data

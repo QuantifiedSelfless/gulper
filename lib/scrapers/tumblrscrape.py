@@ -33,14 +33,17 @@ class TumblrScraper(object):
         cleaned = []
 
         for i in data:
-            goods = {}
-            goods['source_title'] = i.get('source_title', None)
-            goods['post_url'] = i.get('post_url', None)
-            goods['date'] = i.get('date', None)
-            goods['summary'] = i.get('summary', None)
-            goods['photos'] = i.get('photos', None)
-            goods['blog_name'] = i.get('blog_name', None)
-            goods['content'] = i.get('content', None)
+            if isinstance(i, list):
+                goods = self.clean_likes(i)
+            else:
+                goods = {}
+                goods['source_title'] = i.get('source_title', None)
+                goods['post_url'] = i.get('post_url', None)
+                goods['date'] = i.get('date', None)
+                goods['summary'] = i.get('summary', None)
+                goods['photos'] = i.get('photos', None)
+                goods['blog_name'] = i.get('blog_name', None)
+                goods['content'] = i.get('content', None)
 
             cleaned.append(goods)
 
@@ -113,8 +116,8 @@ class TumblrScraper(object):
         if total > 20:
             full_set = yield self.paginate_likes(client, total)
             like_data.append(full_set)
-
-        tumblr_data['likes'] = self.clean_likes(like_data)
+        if len(like_data) > 0:
+            tumblr_data['likes'] = self.clean_likes(like_data)
         follows = client.following()
         tumblr_data['follows'] = follows
         return tumblr_data

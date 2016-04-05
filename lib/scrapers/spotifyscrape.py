@@ -1,6 +1,7 @@
 from tornado import gen
 
 import spotipy
+from spotipy import oauth2
 from lib.config import CONFIG
 
 
@@ -53,10 +54,12 @@ class SpotifyScraper(object):
     def scrape(self, user_data):
         try:
             oauth = user_data.services['spotify']['access_token']
+            refresh = user_data.services['spotify']['refresh_token']
         except KeyError:
             return False
 
         # Before authentication, refresh the token
+        print(oauth2.SpotifyOAuth._refresh_access_token(self, refresh))
         spot = spotipy.Spotify(auth=oauth)
 
         spot_data = {}
