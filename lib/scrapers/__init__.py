@@ -11,6 +11,7 @@ from .fbevents import FBEventsScraper
 from .tumblrscrape import TumblrScraper
 from .spotifyscrape import SpotifyScraper
 from .redditscrape import RedditScraper
+from .twitter import TwitterScraper
 import os
 import ujson as json
 
@@ -25,7 +26,8 @@ scrapers = [
 #    FBEventsScraper(),
 #    TumblrScraper(),
     RedditScraper(),
-#    SpotifyScraper()
+#    SpotifyScraper(),
+    TwiterScraper()
 ]
 
 

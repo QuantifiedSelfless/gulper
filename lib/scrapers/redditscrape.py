@@ -28,7 +28,8 @@ class RedditScraper(object):
             client_id=client_id,
             client_secret=client_secret,
             redirect_uri="http://iamadatapoint.com:8085/auth/reddit")
-        tokens = r.refresh_access_information(refresh_token = tokens['refresh_token'])
+        tokens = r.refresh_access_information(
+            refresh_token=tokens['refresh_token'])
         r.set_access_credentials(**tokens)
 
         data = {}
@@ -67,6 +68,7 @@ class RedditScraper(object):
         karma_l = me.link_karma
 
         submissions = []
+        count = 0
         for i in me.get_submitted():
             if count > self.num_scrape:
                 break
