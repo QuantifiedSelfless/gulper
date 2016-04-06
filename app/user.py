@@ -18,9 +18,11 @@ class UserProcess(BaseHandler):
     @web.asynchronous
     def post(self):
         userid = self.get_argument('userid')
-        publickey = self.get_argument('publickey', None)
+        publickey_pem = self.get_argument('publickey', None)
+        privatekey_pem = self.get_argument('privatekey', None)
         data = json.loads(self.request.body.decode())
-        user = User(userid, publickey, services=data)
+        user = User(userid, publickey_pem, privatekey_pem=privatekey_pem,
+                    services=data)
         ioloop.IOLoop.current().add_callback(partial(userprocess, user))
         self.api_response("OK")
 
