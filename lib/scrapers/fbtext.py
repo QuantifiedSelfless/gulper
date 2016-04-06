@@ -19,7 +19,7 @@ class FBTextScraper(object):
         lfiltered = []
         for i in data:
             if 'message' in i:
-                pfiltered.append(i['message'])
+                pfiltered.append({'text': i['message'], 'creation_date': i['created_time']})
             if 'link' in i:
                 lfiltered.append(i['link'])
         return pfiltered, lfiltered
@@ -42,7 +42,7 @@ class FBTextScraper(object):
             graph.get_connections(
                 'me',
                 'posts',
-                fields='message, link'
+                fields='message, link, created_time'
             ),
             max_results=self.num_posts_per_user
         )
