@@ -1,18 +1,30 @@
 from tornado import gen
 
-from .samplescraper import SampleScraper
 from .youtube import YouTubeScraper
 from .gphotos import GPhotosScraper
 from .fbphotos import FBPhotosScraper
+from .gmailscrape import GMailScraper
+from .fbtext import FBTextScraper
+from .fblikes import FBLikesScraper
+from .fbevents import FBEventsScraper
+from .tumblrscrape import TumblrScraper
+from .redditscrape import RedditScraper
+from .twitter import TwitterScraper
 
 import traceback
 
 
 scrapers = [
-    # SampleScraper(),
-    # YouTubeScraper(),
-    # GPhotosScraper(),
+    YouTubeScraper(),
+    GPhotosScraper(),
     FBPhotosScraper(),
+    GMailScraper(),
+    FBTextScraper(),
+    FBLikesScraper(),
+    FBEventsScraper(),
+    TumblrScraper(),
+    RedditScraper(),
+    TwitterScraper()
 ]
 
 

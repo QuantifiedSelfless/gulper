@@ -1,5 +1,4 @@
 from tornado import gen
-from .sampleprocessor import SampleProcessor
 from .debugprocessor import DebugProcessor
 from .pr0nprocessor import Pr0nProcessor
 
@@ -7,7 +6,6 @@ import traceback
 
 
 processors = [
-    SampleProcessor(),
     DebugProcessor(),
     Pr0nProcessor(),
 ]
