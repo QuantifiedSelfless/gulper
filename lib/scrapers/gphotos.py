@@ -54,7 +54,7 @@ class GPhotosScraper(object):
             id_token=oauth.get('id_token', None)
         )
         http = credentials.authorize(httplib2.Http())
-        gplus = build('drive', 'v3', http)
+        gplus = build('drive', 'v3', http=http)
         print("[gphotos] Scraping user: ", user_data.userid)
 
         photos = list(apiclient_paginate(gplus.files(), 'list', {

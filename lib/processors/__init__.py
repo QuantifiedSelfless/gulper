@@ -5,7 +5,7 @@ from .debugprocessor import DebugProcessor
 
 processors = [
     SampleProcessor(),
-    DebugProcessor(),
+#    DebugProcessor(),
 ]
 
 

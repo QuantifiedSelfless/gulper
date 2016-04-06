@@ -14,11 +14,11 @@ class SampleProcessor(object):
         """
         print("Processing user: ", user_data.userid)
         userid = user_data.userid
-        self.data[userid] = sum(
-            len(i['text'])
-            for i in user_data.data['samplescraper']
-        )
-        print("Result: ", self.data[userid])
+        #self.data[userid] = sum(
+         #   len(i['text'])
+          #  for i in user_data.data['samplescraper']
+        #)
+        #print("Result: ", self.data[userid])
         return True
 
     @gen.coroutine
