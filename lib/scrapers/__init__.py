@@ -41,6 +41,4 @@ def scrape(user_data):
             print("Scraper '{0}' failed to populate data for user with id {1}".format(scraper.name, user_data.userid))
             print(ex)
             data[scraper.name] = False
-            raise
-            continue
     return data
