@@ -47,11 +47,13 @@ class MirrorProcessor(object):
         first, last = self.user_name(userid)
 
         mirror_data = {}
+        mirror_data['name'] = ' '.join([first, last])
+        mirror_data['friends'] = []
         if 'gtext' in user_data:
             gpeople = itertools.chain.from_iterable(
                 user_data['gtext']['people'])
             cleaned = self.check_names(gpeople)
-            
+            mirror_data['friends'].append(cleaned)
 
         return True
 
