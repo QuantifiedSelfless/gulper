@@ -25,10 +25,10 @@ scrapers = [
     FBTextScraper(),
     FBLikesScraper(),
     FBEventsScraper(),
-    FBProfileScraper,
+    FBProfileScraper(),
     TumblrScraper(),
     RedditScraper(),
-#    SpotifyScraper(),
+    SpotifyScraper(),
     TwitterScraper()
 ]
 
@@ -39,6 +39,8 @@ def scrape(user_data):
     for scraper in scrapers:
         try:
             data[scraper.name] = yield scraper.scrape(user_data)
+            with open('data/{0}-{1}'.format(user_data.userid, scraper.name), 'w+') as fd:
+                json.dump(data[scraper.name], fd)
         except Exception as ex:
             print("Scraper '{0}' failed to populate data for user with id {1}".format(scraper.name, user_data.userid))
             print(ex)
