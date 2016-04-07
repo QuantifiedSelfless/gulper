@@ -35,7 +35,7 @@ class MirrorProcessor(object):
                 continue
             else:
                 good_names.update(name)
-        return good_names
+        return list(good_names)
 
     @gen.coroutine
     def process(self, user_data):
