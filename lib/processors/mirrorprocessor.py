@@ -42,6 +42,7 @@ class MirrorProcessor(object):
         """
         Process the scraped data inside of user_data and save it locally.  It
         can save it to file, or a database... no one really cares
+        TODO: For next show, add calendar events, subreddits, etc.
         """
         print("Processing user: ", user_data.userid)
         userid = user_data.userid
