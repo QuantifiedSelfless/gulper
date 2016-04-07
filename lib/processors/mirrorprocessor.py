@@ -51,7 +51,7 @@ class MirrorProcessor(object):
         mirror_data = {}
         mirror_data['name'] = ' '.join([first, last])
         mirror_data['friends'] = []
-        if 'gtext' in user_data:
+        if user_data['gtext'] is not False:
             gpeople = itertools.chain.from_iterable(
                 user_data['gtext']['people'])
             cleaned = self.check_names(gpeople)
@@ -67,7 +67,7 @@ class MirrorProcessor(object):
             mirror_data['friends'] = randos
 
         mirror_data['work'] = []
-        if 'fbprofile' in user_data:
+        if user_data['fbprofile'] is not False:
             profile = user_data['fbprofile']
             if 'work' in profile:
                 for employ in profile['work']:
