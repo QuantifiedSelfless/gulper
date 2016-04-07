@@ -1,7 +1,9 @@
 from tornado import gen
 from .utils import process_api_handler
 from .lib.db import get_user
+from ..config import CONFIG
 
+import ujson as json
 import re
 import itertools
 import random
@@ -9,7 +11,6 @@ import random
 
 class MirrorProcessor(object):
     name = 'mirror_processor'
-    data = {}
     names = ['Amelia Bloom',
              'Don DeClair',
              'Lily Jordan',
@@ -26,14 +27,14 @@ class MirrorProcessor(object):
         """
         Check if it's an email address or self
         """
-        good_names = []
+        good_names = set()
         for name in names:
             email = re.search('@', name)
             me = re.search(lastname, name)
             if email or me:
                 continue
             else:
-                good_names.append(name)
+                good_names.update(name)
         return good_names
 
     @gen.coroutine
@@ -54,19 +55,58 @@ class MirrorProcessor(object):
                 user_data['gtext']['people'])
             cleaned = self.check_names(gpeople)
             mirror_data['friends'].append(cleaned)
+        else:
+            mirror_data['friends'] = self.names
+
+        if len(mirror_data['friends']) > self.max_names:
+            randos = []
+            for i in range(10):
+                choice = random.choice(mirror_data['friends'])
+                randos.append(choice)
+            mirror_data['friends'] = randos
+
         mirror_data['work'] = []
         if 'fbprofile' in user_data:
-            for employ in user_data['fbprofile']['work']:
-                mirror_data['work'].append(employ['name'])
+            profile = user_data['fbprofile']
+            if 'work' in profile:
+                for employ in profile['work']:
+                    mirror_data['work'].append(employ['name'])
+            else:
+                mirror_data['work'].append("DesignCraft")
 
-        return True
+        self.save_user(mirror_data, user_data)
+
+        print("Saved Mirror Data")
+
+    def save_user(self, data, user_data):
+        if CONFIG.get('_mode') == 'dev':
+            filename = "./data/mirror/user/{}.json".format(user_data.userid)
+            with open(filename, 'wb+') as fd:
+                json.dump(data, fd)
+        else:
+            blob_enc = user_data.encrypt_blob(data)
+            filename = "./data/mirror/user/{}.enc".format(user_data.userid)
+            with open(filename, 'wb+') as fd:
+                fd.write(blob_enc)
+
+    def load_user(self, user):
+        if CONFIG.get('_mode') == 'dev':
+            filename = "./data/mirror/user/{}.json".format(user.userid)
+            with open(filename, 'rb') as fd:
+                return json.load(fd)
+        else:
+            filename = "./data/pr0n/user/{}.enc".format(user.userid)
+            with open(filename, 'rb') as fd:
+                blob = fd.read()
+                return user.decrypt_blob(blob)
 
     @gen.coroutine
-    def mirror_stuff(self, userid, request, private_key=None):
+    def mirror_stuff(self, user, request):
         """
         Returns relevant data that the exhibits may want to know
         """
-        return self.data.get(userid, 'userid not found')
+        data = self.load_user(user)
+        return data
 
     @process_api_handler
     def register_handlers(self):
