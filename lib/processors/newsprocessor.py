@@ -7,7 +7,7 @@ import random
 import ujson as json
 
 
-class SampleProcessor(object):
+class NewsProcessor(object):
     name = 'news_processor'
 
     def fb_proxy(self, prof):
