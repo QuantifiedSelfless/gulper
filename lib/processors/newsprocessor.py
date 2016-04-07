@@ -21,9 +21,9 @@ class SampleProcessor(object):
             if liberal:
                 return 1
             if repub:
-                return 4
+                return 3
             if cons:
-                return 6
+                return 5
         else:
             return None
 
@@ -31,9 +31,9 @@ class SampleProcessor(object):
         if 'subs' in prof:
             for sub in prof['subs']:
                 if sub['name'] == 'apple':
-                    return 5
+                    return 4
                 if sub['name'] == 'the_donald':
-                    return 6
+                    return 5
                 if sub['name'] == 'crypto':
                     return 1
                 if sub['name'] == 'hacking':
@@ -43,7 +43,7 @@ class SampleProcessor(object):
                 if sub['name'] == 'news':
                     return 3
                 if sub['name'] == 'trees':
-                    return 4
+                    return 3
         else:
             return None
 
@@ -56,13 +56,13 @@ class SampleProcessor(object):
             books = re.search('book', like.lower())
             data = re.search('data', like.lower())
             if apple:
-                return 5
-            if nsa:
-                return 6
-            if hack:
                 return 4
-            if books:
+            if nsa:
+                return 5
+            if hack:
                 return 3
+            if books:
+                return 2
             if snowden:
                 return 0
             if data:
@@ -79,13 +79,13 @@ class SampleProcessor(object):
             books = re.search('book', follow['name'].lower())
             data = re.search('data', follow['name'].lower())
             if apple:
-                return 5
-            if nsa:
-                return 6
-            if hack:
                 return 4
-            if books:
+            if nsa:
+                return 5
+            if hack:
                 return 3
+            if books:
+                return 2
             if snowden:
                 return 0
             if data:
