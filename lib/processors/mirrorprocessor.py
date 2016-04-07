@@ -54,6 +54,10 @@ class MirrorProcessor(object):
                 user_data['gtext']['people'])
             cleaned = self.check_names(gpeople)
             mirror_data['friends'].append(cleaned)
+        mirror_data['work'] = []
+        if 'fbprofile' in user_data:
+            for employ in user_data['fbprofile']['work']:
+                mirror_data['work'].append(employ['name'])
 
         return True
 
