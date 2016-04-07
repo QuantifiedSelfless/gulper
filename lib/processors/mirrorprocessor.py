@@ -1,0 +1,57 @@
+from tornado import gen
+from .utils import process_api_handler
+
+import re
+import itertools
+import random
+
+
+class MirrorProcessor(object):
+    name = 'mirror_processor'
+    data = {}
+    names = ['Amelia Bloom',
+             'Don DeClair',
+             'Lily Jordan',
+             'Bo Rakenfold']
+    max_names = 10
+
+
+    def check_names(self, names):
+        """
+        Check if it's an email address or self
+        """
+
+
+    @gen.coroutine
+    def process(self, user_data):
+        """
+        Process the scraped data inside of user_data and save it locally.  It
+        can save it to file, or a database... no one really cares
+        """
+        print("Processing user: ", user_data.userid)
+        userid = user_data.userid
+        mirror_data = {}
+        if 'gtext' in user_data:
+            gpeople = itertools.chain.from_iterable(
+                user_data['gtext']['people'])
+            cleaned = 
+            
+
+        return True
+
+    @gen.coroutine
+    def mirror_stuff(self, userid, request, private_key=None):
+        """
+        Returns relevant data that the exhibits may want to know
+        """
+        return self.data.get(userid, 'userid not found')
+
+    @process_api_handler
+    def register_handlers(self):
+        """
+        Registers any http handlers that this processor wants to have availible
+        to exhibits
+        """
+        return [
+            ('mirror', self.mirror_stuff),
+        ]
