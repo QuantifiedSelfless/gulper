@@ -95,7 +95,7 @@ class MirrorProcessor(object):
             with open(filename, 'rb') as fd:
                 return json.load(fd)
         else:
-            filename = "./data/pr0n/user/{}.enc".format(user.userid)
+            filename = "./data/mirror/user/{}.enc".format(user.userid)
             with open(filename, 'rb') as fd:
                 blob = fd.read()
                 return user.decrypt_blob(blob)
