@@ -41,7 +41,7 @@ class NewsProcessor(object):
                 if sub['name'] == 'politics':
                     return 2
                 if sub['name'] == 'news':
-                    return 3
+                    return 2
                 if sub['name'] == 'trees':
                     return 3
         else:
