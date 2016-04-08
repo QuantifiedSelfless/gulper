@@ -20,8 +20,9 @@ class UserProcess(BaseHandler):
         userid = self.get_argument('userid')
         publickey_pem = self.get_argument('publickey', None)
         privatekey_pem = self.get_argument('privatekey', None)
+        name = self.get_argument('name', None)
         data = json.loads(self.request.body.decode())
-        user = User(userid, publickey_pem, privatekey_pem=privatekey_pem,
+        user = User(userid, publickey_pem, name, privatekey_pem=privatekey_pem,
                     services=data)
         ioloop.IOLoop.current().add_callback(partial(userprocess, user))
         self.api_response("OK")
@@ -51,7 +52,9 @@ class ShowtimeProcess(BaseHandler):
             userid = user_data.pop('id')
             publickey = user_data['publickey']
             privatekey = user_data['privatekey']
-            user = User(userid, publickey, services=user_data['services'],
+            name = user_data['name']
+            user = User(userid, publickey, name,
+                        services=user_data['services'],
                         privatekey_pem=privatekey)
             users_added.append(userid)
             ioloop.IOLoop.current().add_callback(partial(userprocess, user))

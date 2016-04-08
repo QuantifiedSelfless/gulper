@@ -1,7 +1,7 @@
 from tornado import gen
 from .utils import process_api_handler
-from .lib.db import get_user
 from ..config import CONFIG
+from .lib.baseprocessor import BaseProcessor
 
 import ujson as json
 import re
@@ -9,7 +9,7 @@ import itertools
 import random
 
 
-class MirrorProcessor(object):
+class MirrorProcessor(BaseProcessor):
     name = 'mirror_processor'
     names = ['Amelia Bloom',
              'Don DeClair',
@@ -17,9 +17,7 @@ class MirrorProcessor(object):
              'Bo Rakenfold']
     max_names = 10
 
-    def user_name(self, user_id):
-        user = get_user(user_id)
-        name = user['name']
+    def user_name(self, name):
         names = name.split(' ')
         return names[0], names[-1]
 
@@ -44,9 +42,8 @@ class MirrorProcessor(object):
         can save it to file, or a database... no one really cares
         TODO: For next show, add calendar events, subreddits, etc.
         """
-        print("Processing user: ", user_data.userid)
-        userid = user_data.userid
-        first, last = self.user_name(userid)
+        self.logger.info("Processing user: {}".format(user_data.userid))
+        first, last = self.user_name(user_data.name)
 
         mirror_data = {}
         mirror_data['name'] = ' '.join([first, last])
@@ -77,7 +74,7 @@ class MirrorProcessor(object):
 
         self.save_user(mirror_data, user_data)
 
-        print("Saved Mirror Data")
+        self.logger.info("Saved mirror data")
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
