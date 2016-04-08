@@ -1,6 +1,5 @@
 from tornado import gen
 
-from .samplescraper import SampleScraper
 from .youtube import YouTubeScraper
 from .gphotos import GPhotosScraper
 from .fbphotos import FBPhotosScraper
@@ -8,15 +7,16 @@ from .gmailscrape import GMailScraper
 from .fbtext import FBTextScraper
 from .fblikes import FBLikesScraper
 from .fbevents import FBEventsScraper
+from .fbprofile import FBProfileScraper
 from .tumblrscrape import TumblrScraper
-from .spotifyscrape import SpotifyScraper
 from .redditscrape import RedditScraper
+from .spotifyscrape import SpotifyScraper
 from .twitter import TwitterScraper
-import os
-import ujson as json
+
+import traceback
+
 
 scrapers = [
-#    SampleScraper(),
     YouTubeScraper(),
     GPhotosScraper(),
     FBPhotosScraper(),
@@ -24,9 +24,10 @@ scrapers = [
     FBTextScraper(),
     FBLikesScraper(),
     FBEventsScraper(),
+    FBProfileScraper(),
     TumblrScraper(),
     RedditScraper(),
-#    SpotifyScraper(),
+    SpotifyScraper(),
     TwitterScraper()
 ]
 
@@ -34,11 +35,11 @@ scrapers = [
 @gen.coroutine
 def scrape(user_data):
     data = {}
-    for scraper in scrapers:
+    for s in scrapers:
         try:
-            data[scraper.name] = yield scraper.scrape(user_data)
-        except Exception as ex:
-            print("Scraper '{0}' failed to populate data for user with id {1}".format(scraper.name, user_data.userid))
-            print(ex)
-            data[scraper.name] = False
+            data[s.name] = yield s.scrape(user_data)
+        except Exception as e:
+            data[s.name] = None
+            print("Scraper {} gave exception: {}".format(s.name, e))
+            traceback.print_exc()
     return data
