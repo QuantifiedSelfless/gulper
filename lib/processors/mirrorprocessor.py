@@ -17,6 +17,9 @@ class MirrorProcessor(BaseProcessor):
              'Bo Rakenfold']
     max_names = 10
 
+    def __init__(self):
+        super().__init__()
+
     def user_name(self, name):
         names = name.split(' ')
         return names[0], names[-1]
