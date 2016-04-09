@@ -27,7 +27,9 @@ def process(user_data):
     result = {}
     for p in processors:
         try:
+            print("starting: ", p.name)
             result[p.name] = yield p.process(user_data)
+            print("done with: ", p.name)
         except Exception as e:
             result[p.name] = None
             print("Processor {} gave exception: {}".format(p.name, e))

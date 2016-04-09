@@ -59,7 +59,7 @@ class SpotifyScraper(object):
             return False
 
         # Before authentication, refresh the token
-        print(oauth2.SpotifyOAuth._refresh_access_token(self, refresh))
+        oauth2.SpotifyOAuth._refresh_access_token(self, refresh)
         spot = spotipy.Spotify(auth=oauth)
 
         spot_data = {}
