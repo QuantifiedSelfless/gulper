@@ -1,6 +1,7 @@
 from tornado import gen
 from .debugprocessor import DebugProcessor
 from .pr0nprocessor import Pr0nProcessor
+from .mentalhealthprocessor import MentalHealthProcessor
 
 import traceback
 
@@ -8,6 +9,7 @@ import traceback
 processors = [
     DebugProcessor(),
     Pr0nProcessor(),
+    MentalHealthProcessor()
 ]
 
 
