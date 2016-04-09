@@ -80,7 +80,7 @@ class TruthProcessor(BaseProcessor):
     def common_subreddit(self, subs):
         allsubs = []
         for sub in subs:
-            allsubs.append(sub)
+            allsubs.append(sub['subreddit'])
         highest = 0
         the_one = None
         for sub in allsubs:
@@ -101,7 +101,8 @@ class TruthProcessor(BaseProcessor):
         good_names = []
         for name in names:
             me = re.search(lastname, name)
-            if me:
+            me2 = re.search(lastname.lower(), name)
+            if me or me2:
                 continue
             else:
                 good_names.append(name)
@@ -118,7 +119,9 @@ class TruthProcessor(BaseProcessor):
         unique = set(people)
         people = list(unique)
         people.remove(person)
-        lie = random.choice(person)
+        lie = ''
+        while len(lie) < 4:
+            lie = random.choice(people)
         return person, lie
 
     def fill_truths(self, truestuff):
@@ -156,8 +159,8 @@ class TruthProcessor(BaseProcessor):
         truth_data['true'] = []
         truth_data['false'] = []
 
-        if user_data.data['gtext'] is not False:
-            if user_data.data['gtext']['people'] is not None:
+        if user_data.data['gtext'] is not False and user_data.data['gtext'] is not None:
+            if user_data.data['gtext'].get('people', None) is not None:
                 gpeople = itertools.chain.from_iterable(
                     user_data.data['gtext']['people'])
                 cleaned = self.check_names(gpeople, user_data.name.split(' ')[-1])
@@ -172,14 +175,12 @@ class TruthProcessor(BaseProcessor):
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
                 truth_data['true'].append(
-                    "Besides articles, prepositions, and pronouns your most common \
-                    word in email is {0}".format(gfreq[0][1]))
+                    "Besides articles, prepositions, and pronouns your most common word in email is {0}".format(gfreq[0][1]))
             else:
                 word_len = len(gfreq)
                 grab = round(word_len * .5)
                 truth_data['false'].append(
-                    "Besides articles, prepositions, and pronouns your most common \
-                    word in email is \"{0}\"".format(gfreq[grab][1]))
+                    "Besides articles, prepositions, and pronouns your most common word in email is \"{0}\"".format(gfreq[grab][1]))
 
         if user_data.data['fbtext'] is not False:
             text_list = [post['text'] for post in user_data.data['fbtext']['text']]
@@ -189,28 +190,24 @@ class TruthProcessor(BaseProcessor):
             if freqme > .1:
                 if random.randint(0, 1) == 0:
                     truth_data['true'].append(
-                        "You use the word \"me\" in {0}\% of your facebook \
-                        posts".format(freqme * 100))
+                        "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100)))
                 else:
                     rand = 0
                     while rand == 0:
                         rand = random.randint(-10, 10)
                     truth_data['false'].append(
-                        "You use the word \"me\" in {0}\% of your facebook \
-                        posts".format(freqme * 100 + rand))
+                        "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100 + rand)))
             freqfuck = self.get_percentage('fuck', text_list)
-            if freqfuck > .5:
+            if freqfuck > .05:
                 if random.randint(0, 1) == 0:
                     truth_data['true'].append(
-                        "You use the word \"fuck\" in {0}\% of your facebook \
-                        posts".format(freqfuck * 100))
+                        "You use the word \"fuck\" in {0}\% of your facebook posts".format(round(freqfuck * 100)))
                 else:
                     rand = 0
                     while rand == 0:
                         rand = random.randint(-5, 10)
                     truth_data['false'].append(
-                        "You use the word \"fuck\" in {0}\% of your facebook \
-                        posts".format(freqfuck * 100 + rand))
+                        "You use the word \"fuck\" in {0}\% of your facebook posts".format(round(freqfuck * 100 + rand)))
             yassquant = self.get_num_uses('yass', fbfreq)
             if yassquant > 5 and len(truth_data['true']) < 5:
                 truth_data['true'].append(
