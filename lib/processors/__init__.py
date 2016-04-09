@@ -1,6 +1,9 @@
 from tornado import gen
 from .debugprocessor import DebugProcessor
 from .pr0nprocessor import Pr0nProcessor
+from .truthprocessor import TruthProcessor
+from .mirrorprocessor import MirrorProcessor
+from .newsprocessor import NewsProcessor
 
 import traceback
 
@@ -8,6 +11,11 @@ import traceback
 processors = [
     DebugProcessor(),
     Pr0nProcessor(),
+    TruthProcessor(),
+    MirrorProcessor(),
+    NewsProcessor()
+
+
 ]
 
 
