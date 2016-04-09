@@ -11,7 +11,9 @@ import os
 class NewsProcessor(object):
     name = 'news_processor'
 
-    if not os.path.exists("./data/news/user"):
+    def __init__(self):
+        super().__init__()
+        if not os.path.exists("./data/news/user"):
             os.makedirs("./data/news/user")
 
     def fb_proxy(self, prof):
