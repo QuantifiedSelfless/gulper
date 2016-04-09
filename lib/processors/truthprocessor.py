@@ -152,9 +152,9 @@ class TruthProcessor(BaseProcessor):
         truth_data['true'] = []
         truth_data['false'] = []
 
-        if user_data['gtext'] is not False:
+        if user_data.data['gtext'] is not False:
             gpeople = itertools.chain.from_iterable(
-                user_data['gtext']['people'])
+                user_data.data['gtext']['people'])
             cleaned = self.check_names(gpeople)
             true, lie = self.common_email_contact(cleaned)
             if random.randint(0, 1) == 0:
@@ -163,7 +163,7 @@ class TruthProcessor(BaseProcessor):
             else:
                 truth_data['false'].append(
                     "Your most common gmail contact is {0}".format(lie))
-            gwords = self.get_words(user_data['gtext']['text'])
+            gwords = self.get_words(user_data.data['gtext']['text'])
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
                 truth_data['true'].append(
@@ -176,8 +176,8 @@ class TruthProcessor(BaseProcessor):
                     "Besides articles, prepositions, and pronouns your most common \
                     word in email is \"{0}\"".format(gfreq[grab][1]))
 
-        if user_data['fbtext'] is not False:
-            text_list = [post['text'] for post in user_data['fbtext']['text']]
+        if user_data.data['fbtext'] is not False:
+            text_list = [post['text'] for post in user_data.data['fbtext']['text']]
             fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
             freqme = self.get_percentage('me', text_list)
@@ -222,9 +222,9 @@ class TruthProcessor(BaseProcessor):
                     "You used the word \"LOL\" {0} times on facebook".format(
                         lolquant + 25))
 
-        if user_data['reddit'] is not False:
+        if user_data.data['reddit'] is not False:
             fact, lie = self.common_subreddit(
-                user_data['reddit']['submissions'])
+                user_data.data['reddit']['submissions'])
             if (len(truth_data['true']) < len(truth_data['false'])):
                 truth_data['true'].append(
                     "Your most common subreddit you submit to is {0}".format(
