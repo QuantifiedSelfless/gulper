@@ -7,6 +7,7 @@ import ujson as json
 import re
 import itertools
 import random
+import os
 
 
 class MirrorProcessor(BaseProcessor):
@@ -19,6 +20,8 @@ class MirrorProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
+        if not os.path.exists("./data/mirror/user"):
+            os.makedirs("./data/mirror/user")
 
     def user_name(self, name):
         names = name.split(' ')
@@ -82,7 +85,7 @@ class MirrorProcessor(BaseProcessor):
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/mirror/user/{}.json".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
+            with open(filename, 'w+') as fd:
                 json.dump(data, fd)
         else:
             blob_enc = user_data.encrypt_blob(data)
@@ -93,7 +96,7 @@ class MirrorProcessor(BaseProcessor):
     def load_user(self, user):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/mirror/user/{}.json".format(user.userid)
-            with open(filename, 'rb') as fd:
+            with open(filename, 'r') as fd:
                 return json.load(fd)
         else:
             filename = "./data/mirror/user/{}.enc".format(user.userid)

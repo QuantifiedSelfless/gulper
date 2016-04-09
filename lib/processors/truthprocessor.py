@@ -8,6 +8,7 @@ import ujson as json
 import itertools
 import re
 import random
+import os
 
 
 class TruthProcessor(BaseProcessor):
@@ -16,6 +17,9 @@ class TruthProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
+        if not os.path.exists("./data/truth/user"):
+            os.makedirs("./data/truth/user")
+
         try:
             fd = open('lib/stopwords.txt', 'r')
             raw = fd.read()
@@ -148,12 +152,12 @@ class TruthProcessor(BaseProcessor):
             else:
                 truth_data['false'].append(
                     "Your most common gmail contact is {0}".format(lie))
-            
+
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/truth/user/{}.json".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
+            with open(filename, 'w+') as fd:
                 json.dump(data, fd)
         else:
             blob_enc = user_data.encrypt_blob(data)
@@ -164,7 +168,7 @@ class TruthProcessor(BaseProcessor):
     def load_user(self, user):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/truth/user/{}.json".format(user.userid)
-            with open(filename, 'rb') as fd:
+            with open(filename, 'r') as fd:
                 return json.load(fd)
         else:
             filename = "./data/truth/user/{}.enc".format(user.userid)

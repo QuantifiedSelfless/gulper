@@ -5,10 +5,14 @@ from ..config import CONFIG
 import re
 import random
 import ujson as json
+import os
 
 
 class NewsProcessor(object):
     name = 'news_processor'
+
+    if not os.path.exists("./data/news/user"):
+            os.makedirs("./data/news/user")
 
     def fb_proxy(self, prof):
         if 'political' in prof:
@@ -119,7 +123,7 @@ class NewsProcessor(object):
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/news/user/{}.json".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
+            with open(filename, 'w+') as fd:
                 json.dump(data, fd)
         else:
             blob_enc = user_data.encrypt_blob(data)
@@ -130,7 +134,7 @@ class NewsProcessor(object):
     def load_user(self, user):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/news/user/{}.json".format(user.userid)
-            with open(filename, 'rb') as fd:
+            with open(filename, 'r') as fd:
                 return json.load(fd)
         else:
             filename = "./data/news/user/{}.enc".format(user.userid)
