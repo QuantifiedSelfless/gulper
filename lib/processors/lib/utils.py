@@ -1,7 +1,8 @@
 from tornado import gen
-import cryptohelper
 
-from ..basehandler import BaseHandler
+from ...basehandler import BaseHandler
+from ...user import User
+from ...database.db import get_user
 
 
 def make_handler(handler):
@@ -10,10 +11,13 @@ def make_handler(handler):
         def get(self):
             userid = self.get_argument('userid')
             privatekey_pem = self.get_argument('privatekey', None)
-            privatekey = None
-            if privatekey_pem:
-                privatekey = cryptohelper.import_key(privatekey)
-            data = yield handler(userid, self, privatekey)
+            publickey_pem = self.get_argument('publickey', None)
+            user_blob = get_user(userid)
+            user_name = user_blob['name']
+            user = User(userid, user_name,
+                        publickey_pem=publickey_pem,
+                        privatekey_pem=privatekey_pem)
+            data = yield handler(user, self)
             return self.api_response(data)
     return ProcAPIHandler
 
