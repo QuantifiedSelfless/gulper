@@ -157,6 +157,7 @@ class Pr0nProcessor(BaseProcessor):
         }
         self.save_user(blob, user_data)
         self.logger.info("Saved pr0n data")
+        return True
 
     def save_user(self, blob, user_data):
         if CONFIG.get('_mode') == 'dev':
