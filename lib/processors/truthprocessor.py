@@ -137,16 +137,28 @@ class TruthProcessor(BaseProcessor):
     def percentage_check(self, word, text_list, thresh, fact_str, facts, lies):
         freq = self.get_percentage(word, text_list)
         if freq > thresh:
-            if random.randint(0, 1) == 0 and len(facts) < 5:
+            if random.randint(0, 1) == 0 and len(facts) <= 5:
                 facts.append(
                     fact_str.format(round(freq * 100)))
             else:
                 rand = 0
                 while rand == 0:
-                    rand = random.randint(-10, 10)
+                    rand = random.randint(-(thresh*10), thresh*10)
                 lies.append(
                     fact_str.format(round(freq * 100 + rand)))
         return facts, lies
+
+        def check_uses(self, word, freq, thresh, fact_str, facts, lies, which):
+            quant = self.get_num_uses(word, freq)
+            if which == 0:
+                if quant >= thresh and len(facts) <= self.truths:
+                    facts.append(
+                        fact_str.format(quant))
+            else:
+                if quant >= thresh and len(lies) <= 15 - self.truths:
+                    lies.append(
+                        fact_str.format(quant * random.randint(round(thresh/3), thresh*3)))
+            return facts, lies
 
     @gen.coroutine
     def process(self, user_data):
@@ -200,48 +212,28 @@ class TruthProcessor(BaseProcessor):
             text_list = [post['text'] for post in user_data.data['fbtext']['text']]
             fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
+            # Later this can be a loop that tried different word, token pairs
             truth_data['true'], truth_data['false'] = self.percentage_check(
                     'me', text_list, .1,
-                    "You use the word \"me\" in {0}\% of your facebook posts",
+                    "You use the word \"me\" in {0}% of your facebook posts",
                     truth_data['true'], truth_data['false'])
-
-            # freqme = self.get_percentage('me', text_list)
-            # if freqme > .1:
-            #     if random.randint(0, 1) == 0:
-            #         truth_data['true'].append(
-            #             "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100)))
-            #     else:
-            #         rand = 0
-            #         while rand == 0:
-            #             rand = random.randint(-10, 10)
-            #         truth_data['false'].append(
-            #             "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100 + rand)))
-            freqfuck = self.get_percentage('fuck', text_list)
-            if freqfuck > .05:
-                if random.randint(0, 1) == 0:
-                    truth_data['true'].append(
-                        "You use the word \"fuck\" in {0}\% of your facebook posts".format(round(freqfuck * 100)))
-                else:
-                    rand = 0
-                    while rand == 0:
-                        rand = random.randint(-5, 10)
-                    truth_data['false'].append(
-                        "You use the word \"fuck\" in {0}\% of your facebook posts".format(round(freqfuck * 100 + rand)))
-            yassquant = self.get_num_uses('yass', fbfreq)
-            if yassquant > 5 and len(truth_data['true']) < 5:
-                truth_data['true'].append(
-                    "You used the word \"yass\" {0} times on facebook".format(
-                        yassquant))
-            dafuqquant = self.get_num_uses('dafuq', fbfreq)
-            if dafuqquant > 5 and len(truth_data['true']) < 5:
-                truth_data['true'].append(
-                    "You used the word \"dafuq\" {0} times on facebook".format(
-                        dafuqquant))
-            lolquant = self.get_num_uses('lol', fbfreq)
-            if lolquant > 3 and len(truth_data['false']) < 5:
-                truth_data['false'].append(
-                    "You used the word \"LOL\" {0} times on facebook".format(
-                        lolquant + 25))
+            truth_data['true'], truth_data['false'] = self.percentage_check(
+                    'fuck', text_list, .05,
+                    "You use the word \"fuck\" in {0}% of your facebook posts",
+                    truth_data['true'], truth_data['false'])
+            # Now going to get into checking number of word uses
+            truth_data['true'], truth_data['false'] = self.check_uses(
+                    'yass', fbfreq, 5,
+                    "You used the word \"yass\" {0} times on facebook",
+                    truth_data['true'], truth_data['false'], 0)
+            truth_data['true'], truth_data['false'] = self.check_uses(
+                    'dafuq', fbfreq, 5,
+                    "You used the word \"dafuq\" {0} times on facebook",
+                    truth_data['true'], truth_data['false'], 0)
+            truth_data['true'], truth_data['false'] = self.check_uses(
+                    'lol', fbfreq, 5,
+                    "You used the word \"LOL\" {0} times on facebook",
+                    truth_data['true'], truth_data['false'], 1)
 
         if user_data.data['reddit'] is not False:
             fact, lie = self.common_subreddit(
