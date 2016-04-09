@@ -4,6 +4,7 @@ from .pr0nprocessor import Pr0nProcessor
 from .truthprocessor import TruthProcessor
 from .mirrorprocessor import MirrorProcessor
 from .newsprocessor import NewsProcessor
+from .ownupprocessor import OwnupProcessor
 
 import traceback
 
@@ -14,8 +15,7 @@ processors = [
     TruthProcessor(),
     MirrorProcessor(),
     NewsProcessor()
-
-
+    OwnupProcessor()
 ]
 
 
