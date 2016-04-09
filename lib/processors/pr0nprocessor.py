@@ -72,6 +72,9 @@ class Pr0nProcessor(BaseProcessor):
                 continue
             yield photo
 
+    def valid_tag(self, tag, names):
+        return tag['name'] not in names and tag.get('id') is not None
+
     @gen.coroutine
     def process(self, user_data):
         """
@@ -80,6 +83,7 @@ class Pr0nProcessor(BaseProcessor):
         """
         self.logger.info("Processing user: {}".format(user_data.userid))
         if not user_data.data.get('fbphotos'):
+            self.logger.debug("No FB photos found for: %s", user_data.userid)
             return False
         photos_me_and_friends = IT.chain.from_iterable(
             user_data.data['fbphotos'].values()
@@ -96,6 +100,8 @@ class Pr0nProcessor(BaseProcessor):
 
         photos = list(self.filter_photos(photos_me_and_friends))
         if not photos:
+            self.logger.debug("No useful photos found for: %s",
+                              user_data.userid)
             return False
         names_to_scores = {}
         images_to_scores = {}
@@ -104,6 +110,8 @@ class Pr0nProcessor(BaseProcessor):
             for face in photo['faces']:
                 # skip photos with no facebook tags
                 if not face['tags']:
+                    continue
+                if all(not self.valid_tag(t, {me}) for t in face['tags']):
                     continue
                 # skip photos where the person isn't looking straight at the
                 # camera (zero is the subclassifier index in dlib for that)
@@ -118,11 +126,13 @@ class Pr0nProcessor(BaseProcessor):
                 if not closest_pr0ns:
                     continue
                 for tag in face['tags']:
-                    if tag['name'] == me or tag.get('id') is None:
+                    if not self.valid_tag(tag, {me}):
                         continue
                     _id = "{}::{}".format(tag['name'], photo['id'])
                     user_engine.store_vector(face['face_hash'], _id)
                 for img_hash, img, distance in closest_pr0ns:
+                    if not any(self.valid_tag(t, {me}) for t in face['tags']):
+                        continue
                     images_to_scores[img] = {
                         'scores': {'direct': 0},
                         'names': {},
@@ -130,7 +140,7 @@ class Pr0nProcessor(BaseProcessor):
                     }
                     for tag in face['tags']:
                         name = tag['name']
-                        if name == me or tag.get('id') is None:
+                        if not self.valid_tag(tag, {me}):
                             continue
                         if name not in names_to_scores:
                             names_to_scores[name] = {
@@ -196,7 +206,7 @@ class Pr0nProcessor(BaseProcessor):
                                 names_data[name]['scores']['similar'] +
                                 dist)
                         for name, dist in d['names'].items())
-            score /= float(norm)
+            score /= float(norm or 1.0)
             if 0 <= score < pick_score:
                 pick_id, pick_score = img, score
         # no pick id? then the client should show results
@@ -228,7 +238,6 @@ class Pr0nProcessor(BaseProcessor):
         image_hash = images_data[image_id]['image_hash']
         for _, similar, dist in data['engine'].neighbours(image_hash):
             name, _ = similar.split("::", 1)
-            print("similar: ", name, dist)
             dist = float(dist)
             names_data[name]['scores']['similar'] += preference / dist
             names_data[name]['normalization']['similar'] += 1.0 / dist
@@ -243,13 +252,14 @@ class Pr0nProcessor(BaseProcessor):
         data = self.load_user(user)
         scores = []
         for name, data in data['names_to_scores'].items():
-            name_score = data['scores']['name'] / data['normalization']['name']
+            name_score = data['scores']['name'] / \
+                    (data['normalization']['name'] or 1.0)
             similarity_score = data['scores']['similar'] /  \
-                data['normalization']['similar']
+                (data['normalization']['similar'] or 1.0)
             score = name_score + 0.5 * similarity_score
             scores.append((name, score))
-        sorted(scores, reverse=True, key=itemgetter(1))
-        return scores
+        scores.sort(reverse=True, key=itemgetter(1))
+        return [{"name": n, "score": s} for n, s in scores]
 
     @process_api_handler
     def register_handlers(self):

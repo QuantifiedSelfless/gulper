@@ -50,7 +50,7 @@ class ShowtimeProcess(BaseHandler):
         for user_data in show_data['data']['users']:
             userid = user_data.pop('id')
             publickey = user_data['publickey']
-            privatekey = user_data['privatekey']
+            privatekey = user_data.get('privatekey')
             user = User(userid, publickey, services=user_data['services'],
                         privatekey_pem=privatekey)
             users_added.append(userid)
