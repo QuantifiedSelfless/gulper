@@ -46,6 +46,8 @@ class TruthProcessor(BaseProcessor):
     def get_words(self, text_list):
         words = []
         for text in text_list:
+            if text is None:
+                continue
             words.extend(re.findall(r"[\w']+", text))
         lower = [word.lower() for word in words]
         return lower
