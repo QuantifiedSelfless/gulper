@@ -1,5 +1,5 @@
 from tornado import gen
-from .utils import process_api_handler
+from .lib.utils import process_api_handler
 from ..config import CONFIG
 from .lib.baseprocessor import BaseProcessor
 
