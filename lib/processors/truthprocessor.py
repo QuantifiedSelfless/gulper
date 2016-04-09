@@ -62,9 +62,9 @@ class TruthProcessor(BaseProcessor):
         return aux
 
     def get_num_uses(self, word, wordfreq):
-        for word in wordfreq:
-            if word[1] == word:
-                return word[0]
+        for wordf in wordfreq:
+            if wordf[1] == word:
+                return wordf[0]
         return 0
 
     def get_percentage(self, word, text_list):
@@ -148,17 +148,17 @@ class TruthProcessor(BaseProcessor):
                     fact_str.format(round(freq * 100 + rand)))
         return facts, lies
 
-        def check_uses(self, word, freq, thresh, fact_str, facts, lies, which):
-            quant = self.get_num_uses(word, freq)
-            if which == 0:
-                if quant >= thresh and len(facts) <= self.truths:
-                    facts.append(
-                        fact_str.format(quant))
-            else:
-                if quant >= thresh and len(lies) <= 15 - self.truths:
-                    lies.append(
-                        fact_str.format(quant * random.randint(round(thresh/3), thresh*3)))
-            return facts, lies
+    def check_uses(self, word, freq, thresh, fact_str, facts, lies, which):
+        quant = self.get_num_uses(word, freq)
+        if which == 0:
+            if quant >= thresh and len(facts) <= self.truths:
+                facts.append(
+                    fact_str.format(quant))
+        else:
+            if quant >= thresh and len(lies) <= 15 - self.truths:
+                lies.append(
+                    fact_str.format(quant * random.randint(round(thresh/3), thresh*3)))
+        return facts, lies
 
     @gen.coroutine
     def process(self, user_data):
@@ -234,6 +234,10 @@ class TruthProcessor(BaseProcessor):
                     'lol', fbfreq, 5,
                     "You used the word \"LOL\" {0} times on facebook",
                     truth_data['true'], truth_data['false'], 1)
+            truth_data['true'], truth_data['false'] = self.check_uses(
+                    'love', fbfreq, 5,
+                    "You used the word \"love\" {0} times on facebook",
+                    truth_data['true'], truth_data['false'], 0)
 
         if user_data.data['reddit'] is not False:
             fact, lie = self.common_subreddit(
