@@ -31,14 +31,16 @@ class MirrorProcessor(BaseProcessor):
         """
         Check if it's an email address or self
         """
-        good_names = set()
+        good_names = []
         for name in names:
+            print(name)
             email = re.search('@', name)
             me = re.search(lastname, name)
             if email or me:
                 continue
             else:
-                good_names.update(name)
+                good_names.append(name)
+        good_names = set(good_names)
         return list(good_names)
 
     @gen.coroutine
@@ -54,11 +56,14 @@ class MirrorProcessor(BaseProcessor):
         mirror_data = {}
         mirror_data['name'] = ' '.join([first, last])
         mirror_data['friends'] = []
-        if user_data['gtext'] is not False:
-            gpeople = itertools.chain.from_iterable(
-                user_data['gtext']['people'])
-            cleaned = self.check_names(gpeople)
-            mirror_data['friends'].append(cleaned)
+        if user_data.data['gtext'] is not False and user_data.data['gtext'] is not None:
+            if user_data.data['gtext']['people'] is not None:
+                gpeople = itertools.chain.from_iterable(
+                    user_data.data['gtext']['people'])
+                cleaned = self.check_names(gpeople, last)
+                mirror_data['friends'].append(cleaned)
+            else:
+                mirror_data['friends'] = self.names
         else:
             mirror_data['friends'] = self.names
 
@@ -70,11 +75,14 @@ class MirrorProcessor(BaseProcessor):
             mirror_data['friends'] = randos
 
         mirror_data['work'] = []
-        if user_data['fbprofile'] is not False:
-            profile = user_data['fbprofile']
+        if user_data.data['fbprofile'] is not False:
+            profile = user_data.data['fbprofile']
             if 'work' in profile:
                 for employ in profile['work']:
-                    mirror_data['work'].append(employ['name'])
+                    if 'employer' in employ:
+                        mirror_data['work'].append(employ['employer']['name'])
+                    else:
+                        mirror_data['work'].append("DesignCraft")
             else:
                 mirror_data['work'].append("DesignCraft")
 
