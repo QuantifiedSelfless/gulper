@@ -1,11 +1,8 @@
 from tornado import gen
 import pickle
 
-from ..config import CONFIG
-from .lib.baseprocessor import BaseProcessor
 
-
-class DebugProcessor(BaseProcessor):
+class DebugProcessor(object):
     name = 'debug_processor'
     data = {}
 
@@ -14,12 +11,10 @@ class DebugProcessor(BaseProcessor):
         """
         Save user data for inspection
         """
-        if CONFIG.get('_mode') != 'dev':
-            return False
         filename = "./data/debug/{}.pkl".format(user_data.userid)
         with open(filename, 'wb+') as fd:
             pickle.dump(user_data.data, fd)
-        self.logger.info("Saved used {} to {}".format(user_data.userid, filename))
+        print("Saved used {} to {}".format(user_data.userid, filename))
         return True
 
     def register_handlers(self):

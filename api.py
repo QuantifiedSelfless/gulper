@@ -39,6 +39,6 @@ if __name__ == "__main__":
         cookie_secret=CONFIG.get("cookie_secret"),
     )
 
-    print("Listening on port: " + str(port))
     app.listen(port, protocol='https')
+    print("Listening on port: " + str(port))
     ioloop.IOLoop.current().start()

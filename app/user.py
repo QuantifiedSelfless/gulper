@@ -5,12 +5,10 @@ from tornado.httputil import url_concat
 from tornado.httpclient import AsyncHTTPClient
 
 from lib.basehandler import BaseHandler
-from lib.user import User
-from lib.userprocess import userprocess
+from lib.userscraper import UserScraper
 from lib.config import CONFIG
 
 import ujson as json
-from functools import partial
 
 
 class UserProcess(BaseHandler):
@@ -18,13 +16,10 @@ class UserProcess(BaseHandler):
     @web.asynchronous
     def post(self):
         userid = self.get_argument('userid')
-        publickey_pem = self.get_argument('publickey', None)
-        privatekey_pem = self.get_argument('privatekey', None)
-        name = self.get_argument('name', None)
+        publickey = self.get_argument('publickey', None)
         data = json.loads(self.request.body.decode())
-        user = User(userid, publickey_pem, name, privatekey_pem=privatekey_pem,
-                    services=data)
-        ioloop.IOLoop.current().add_callback(partial(userprocess, user))
+        user = UserScraper(userid, publickey, data)
+        ioloop.IOLoop.current().add_callback(user.start)
         self.api_response("OK")
 
 
@@ -50,14 +45,10 @@ class ShowtimeProcess(BaseHandler):
         users_added = []
         for user_data in show_data['data']['users']:
             userid = user_data.pop('id')
-            publickey = user_data['publickey']
-            privatekey = user_data['privatekey']
-            name = user_data['name']
-            user = User(userid, publickey, name,
-                        services=user_data['services'],
-                        privatekey_pem=privatekey)
             users_added.append(userid)
-            ioloop.IOLoop.current().add_callback(partial(userprocess, user))
+            publickey = user_data.pop('publickey', None)
+            user = UserScraper(userid, publickey, user_data)
+            ioloop.IOLoop.current().add_callback(user.start)
         return self.api_response(users_added)
 
 

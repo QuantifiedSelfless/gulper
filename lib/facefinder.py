@@ -8,27 +8,21 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 import dlib
-from . import openface
 
 detector = dlib.get_frontal_face_detector()
 http_client = AsyncHTTPClient()
 
 
-def find_faces_buffer(image_fd, hash_face=False, upsample=1):
+def find_faces_buffer(image_fd, upsample=1):
     image = Image.open(image_fd)
     image_np = np.array(image)
     rects, scores, poses = detector.run(image_np, 1)
-    data = [{"rect": r, "score": s, "pose": p}
+    return [{"rect": r, "score": s, "pose": p}
             for r, s, p in zip(rects, scores, poses)]
-    for d in data:
-        d['face_hash'] = None
-        if hash_face:
-            d['face_hash'] = openface.hash_face(image_np, bb=d['rect'])
-    return data
 
 
 @gen.coroutine
-def find_faces_url(url, hash_face=False, upsample=1):
+def find_faces_url(url, upsample=1):
     """
     Given a URL to an image, find all the faces.  The returned list has
     dictionaries with the following fields:
@@ -45,4 +39,4 @@ def find_faces_url(url, hash_face=False, upsample=1):
     if image_req.code != 200:
         return []
     image_fd = BytesIO(image_req.body)
-    return find_faces_buffer(image_fd, hash_face=hash_face, upsample=upsample)
+    return find_faces_buffer(image_fd, upsample=upsample)

@@ -11,17 +11,14 @@ IMAGE_SIZE = 96
 ALIGN = openface.AlignDlib(
     OPENFACE_ROOT + "/models/dlib/shape_predictor_68_face_landmarks.dat"
 )
-NET = None
+NET = openface.TorchNeuralNet(
+    OPENFACE_ROOT + "/models/openface/nn4.small2.v1.t7",
+    imgDim=IMAGE_SIZE,
+    cuda=False
+)
 
 
 def hash_face(image, bb=None, alignedFace=None):
-    global NET
-    if NET is None:
-        NET = openface.TorchNeuralNet(
-            OPENFACE_ROOT + "/models/openface/nn4.small2.v1.t7",
-            imgDim=IMAGE_SIZE,
-            cuda=False
-        )
     if alignedFace is not None:
         return NET.forward(alignedFace)
 
