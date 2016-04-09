@@ -3,7 +3,6 @@ from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
-from collections import Counter
 import ujson as json
 import itertools
 import re
@@ -42,11 +41,14 @@ class TruthProcessor(BaseProcessor):
             self.realfacts = raw.split('\n')
         except (IOError, ValueError):
             self.logger.info("Couldn't find real facts")
+        self.truths = random.randint(7, 8)
 
     def get_words(self, text_list):
         words = []
         for text in text_list:
             words.extend(re.findall(r"[\w']+", words))
+        lower = [word.lower() for word in words]
+        return lower
 
     def word_freq(self, wordlist):
         cleanwords = [w for w in wordlist if w not in self.stopwords]
@@ -67,7 +69,6 @@ class TruthProcessor(BaseProcessor):
         total = float(len(text_list))
         count = 0
         for text in text_list:
-            words = text.split()
             if word in text:
                 count += 1
         return count/total
@@ -115,6 +116,16 @@ class TruthProcessor(BaseProcessor):
         people.remove(person)
         lie = random.choice(person)
         return person, lie
+
+    def fill_truths(self, truestuff):
+        while len(truestuff) < self.truths:
+            truestuff.append(random.choice(self.realfacts))
+        return truestuff
+
+    def fill_lies(self, lies):
+        while len(lies) < (15 - self.truths):
+            lies.append(random.choice(self.fakefacts))
+        return lies
 
     @gen.coroutine
     def process(self, user_data):
@@ -181,10 +192,53 @@ class TruthProcessor(BaseProcessor):
                         rand = random.randint(-10, 10)
                     truth_data['false'].append(
                         "You use the word \"me\" in {0}\% of your facebook \
-                        posts".format(freqme * 100 + rand)
+                        posts".format(freqme * 100 + rand))
+            freqfuck = self.get_percentage('fuck', text_list)
+            if freqfuck > .5:
+                if random.randint(0, 1) == 0:
+                    truth_data['true'].append(
+                        "You use the word \"fuck\" in {0}\% of your facebook \
+                        posts".format(freqfuck * 100))
+                else:
+                    rand = 0
+                    while rand == 0:
+                        rand = random.randint(-5, 10)
+                    truth_data['false'].append(
+                        "You use the word \"fuck\" in {0}\% of your facebook \
+                        posts".format(freqfuck * 100 + rand))
+            yassquant = self.get_num_uses('yass', fbfreq)
+            if yassquant > 5 and len(truth_data['true']) < 5:
+                truth_data['true'].append(
+                    "You used the word \"yass\" {0} times on facebook".format(
+                        yassquant))
+            dafuqquant = self.get_num_uses('dafuq', fbfreq)
+            if dafuqquant > 5 and len(truth_data['true']) < 5:
+                truth_data['true'].append(
+                    "You used the word \"dafuq\" {0} times on facebook".format(
+                        dafuqquant))
+            lolquant = self.get_num_uses('lol', fbfreq)
+            if lolquant > 3 and len(truth_data['false']) < 5:
+                truth_data['false'].append(
+                    "You used the word \"LOL\" {0} times on facebook".format(
+                        lolquant + 25))
 
+        if user_data['reddit'] is not False:
+            fact, lie = self.common_subreddit(
+                user_data['reddit']['submissions'])
+            if (len(truth_data['true']) < len(truth_data['false'])):
+                truth_data['true'].append(
+                    "Your most common subreddit you submit to is {0}".format(
+                        fact))
+            else:
+                truth_data['false'].append(
+                    "Your most common subreddit you submit to is {0}".format(
+                        lie))
 
+        truth_data['true'] = self.fill_truths(truth_data['true'])
+        truth_data['false'] = self.fill_lies(truth_data['false'])
 
+        self.save_user(truth_data, user_data)
+        self.logger.info("Saved truth game data")
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
@@ -223,5 +277,5 @@ class TruthProcessor(BaseProcessor):
         to exhibits
         """
         return [
-            ('truth', self.truth_grab,
+            ('truth', self.truth_grab),
         ]
