@@ -1,12 +1,28 @@
 echo "Installing system packages"
-sudo apt-get install \
+
+# ubuntu 14.04 ships with an OOLLLDDD version of cmake
+sudo add-apt-repository -y ppa:george-edison55/cmake-3.x
+
+#ubuntu 14.04 has no easy way of install python3.5
+sudo add-apt-repository -y ppa:fkrull/deadsnakes
+
+sudo apt update
+sudo apt install \
     libatlas-base-dev gfortran \
     libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
     build-essential cmake git pkg-config libreadline-dev \
-    libboost-python-dev python3 python3-dev python3-pip \
+    libboost-python-dev python3.5 python3.5-dev \
     libopenblas-dev liblapack-dev libx11-dev || exit 0
 sleep 5
+
+if ! command -v "pip3.5" > /dev/null; then
+    echo "Installing pip-3.5"
+    curl -o /tmp/get-pip.py https://bootstrap.pypa.io/get-pip.py
+    sudo python3.5 /tmp/get-pip.py
+    rm -rf /tmp/get-pip.py
+    sleep 5
+fi
 
 echo "Getting openface models"
 git submodule init
@@ -24,11 +40,11 @@ fi
 
 if ! python3.5 -c 'import cv2'; then
     echo "Installing numpy"
-    sudo pip3 install numpy
+    sudo pip3.5 install numpy
     sleep 5
 
     tempdir=$( mktemp -d --suffix='.opencv' )
-    cd ${tempdir}
+    pushd ${tempdir}
     git clone https://github.com/Itseez/opencv.git
     cd opencv
     git checkout 3.1.0
@@ -41,13 +57,17 @@ if ! python3.5 -c 'import cv2'; then
         .. && \
     make && \
     sudo make install || exit 0
+    rm -rf ${tempdir}
+    popd
 fi
 
 if [ ! -d ~/torch ]; then
     git clone https://github.com/torch/distro.git ~/torch --recursive
-    cd ~/torch; bash install-deps;
+    pushd ~/torch; 
+    bash install-deps;
     ./install.sh -b
+    popd
 fi
 
 echo "Getting python packages"
-sudo pip3 install -U -r requirements.txt
+sudo pip3.5 install -U -r requirements.txt
