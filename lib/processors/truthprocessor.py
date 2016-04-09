@@ -134,6 +134,20 @@ class TruthProcessor(BaseProcessor):
             lies.append(random.choice(self.fakefacts))
         return lies
 
+    def percentage_check(self, word, text_list, thresh, fact_str, facts, lies):
+        freq = self.get_percentage(word, text_list)
+        if freq > thresh:
+            if random.randint(0, 1) == 0 and len(facts) < 5:
+                facts.append(
+                    fact_str.format(round(freq * 100)))
+            else:
+                rand = 0
+                while rand == 0:
+                    rand = random.randint(-10, 10)
+                lies.append(
+                    fact_str.format(round(freq * 100 + rand)))
+        return facts, lies
+
     @gen.coroutine
     def process(self, user_data):
         """
@@ -186,17 +200,22 @@ class TruthProcessor(BaseProcessor):
             text_list = [post['text'] for post in user_data.data['fbtext']['text']]
             fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
-            freqme = self.get_percentage('me', text_list)
-            if freqme > .1:
-                if random.randint(0, 1) == 0:
-                    truth_data['true'].append(
-                        "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100)))
-                else:
-                    rand = 0
-                    while rand == 0:
-                        rand = random.randint(-10, 10)
-                    truth_data['false'].append(
-                        "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100 + rand)))
+            truth_data['true'], truth_data['false'] = self.get_percentage(
+                    'me', text_list, .1,
+                    "You use the word \"me\" in {0}\% of your facebook posts",
+                    truth_data['true'], truth_data['false'])
+
+            # freqme = self.get_percentage('me', text_list)
+            # if freqme > .1:
+            #     if random.randint(0, 1) == 0:
+            #         truth_data['true'].append(
+            #             "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100)))
+            #     else:
+            #         rand = 0
+            #         while rand == 0:
+            #             rand = random.randint(-10, 10)
+            #         truth_data['false'].append(
+            #             "You use the word \"me\" in {0}\% of your facebook posts".format(round(freqme * 100 + rand)))
             freqfuck = self.get_percentage('fuck', text_list)
             if freqfuck > .05:
                 if random.randint(0, 1) == 0:
