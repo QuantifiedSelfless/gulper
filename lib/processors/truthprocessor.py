@@ -20,7 +20,7 @@ class TruthProcessor(BaseProcessor):
             os.makedirs("./data/truth/user")
 
         try:
-            fd = open('lib/stopwords.txt', 'r')
+            fd = open('./lib/processors/lib/stopwords.txt', 'r')
             raw = fd.read()
             fd.close()
             self.stopwords = raw.split('\n')
@@ -28,14 +28,14 @@ class TruthProcessor(BaseProcessor):
         except (IOError, ValueError):
             self.logger.info("Stop words not availble")
         try:
-            fd = open('lib/fakefacts.txt', 'r')
+            fd = open('./lib/processors/lib/fakefacts.txt', 'r')
             raw = fd.read()
             fd.close()
             self.fakefacts = raw.split('\n')
         except (IOError, ValueError):
             self.logger.info("Couldn't find fake facts")
         try:
-            fd = open('lib/realfacts.txt', 'r')
+            fd = open('./lib/processors/lib/realfacts.txt', 'r')
             raw = fd.read()
             fd.close()
             self.realfacts = raw.split('\n')
@@ -69,6 +69,8 @@ class TruthProcessor(BaseProcessor):
 
     def get_percentage(self, word, text_list):
         total = float(len(text_list))
+        if total == 0:
+            return 0
         count = 0
         for text in text_list:
             if word in text:
@@ -155,16 +157,17 @@ class TruthProcessor(BaseProcessor):
         truth_data['false'] = []
 
         if user_data.data['gtext'] is not False:
-            gpeople = itertools.chain.from_iterable(
-                user_data.data['gtext']['people'])
-            cleaned = self.check_names(gpeople, user_data.name.split(' ')[-1])
-            true, lie = self.common_email_contact(cleaned)
-            if random.randint(0, 1) == 0:
-                truth_data['true'].append(
-                    "Your most common gmail contact is {0}".format(true))
-            else:
-                truth_data['false'].append(
-                    "Your most common gmail contact is {0}".format(lie))
+            if user_data.data['gtext']['people'] is not None:
+                gpeople = itertools.chain.from_iterable(
+                    user_data.data['gtext']['people'])
+                cleaned = self.check_names(gpeople, user_data.name.split(' ')[-1])
+                true, lie = self.common_email_contact(cleaned)
+                if random.randint(0, 1) == 0:
+                    truth_data['true'].append(
+                        "Your most common gmail contact is {0}".format(true))
+                else:
+                    truth_data['false'].append(
+                        "Your most common gmail contact is {0}".format(lie))
             gwords = self.get_words(user_data.data['gtext']['text'])
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
