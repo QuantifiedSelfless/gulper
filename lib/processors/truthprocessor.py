@@ -152,6 +152,38 @@ class TruthProcessor(BaseProcessor):
             else:
                 truth_data['false'].append(
                     "Your most common gmail contact is {0}".format(lie))
+            gwords = self.get_words(user_data['gtext']['text'])
+            gfreq = self.word_freq(gwords)
+            if random.randint(0, 1) == 0:
+                truth_data['true'].append(
+                    "Besides articles, prepositions, and pronouns your most common \
+                    word in email is {0}".format(gfreq[0][1]))
+            else:
+                word_len = len(gfreq)
+                grab = round(word_len * .5)
+                truth_data['false'].append(
+                    "Besides articles, prepositions, and pronouns your most common \
+                    word in email is \"{0}\"".format(gfreq[grab][1]))
+
+        if user_data['fbtext'] is not False:
+            text_list = [post['text'] for post in user_data['fbtext']['text']]
+            fbwords = self.get_words(text_list)
+            fbfreq = self.word_freq(fbwords)
+            freqme = self.get_percentage('me', text_list)
+            if freqme > .1:
+                if random.randint(0, 1) == 0:
+                    truth_data['true'].append(
+                        "You use the word \"me\" in {0}\% of your facebook \
+                        posts".format(freqme * 100))
+                else:
+                    rand = 0
+                    while rand == 0:
+                        rand = random.randint(-10, 10)
+                    truth_data['false'].append(
+                        "You use the word \"me\" in {0}\% of your facebook \
+                        posts".format(freqme * 100 + rand)
+
+
 
 
     def save_user(self, data, user_data):
