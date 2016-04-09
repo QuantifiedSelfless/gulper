@@ -36,7 +36,6 @@ class TwitterScraper(object):
         res = favs
         while count < self.num_scrape and len(res) > 0:
             for fav in res:
-                print(fav.text)
                 data.append(fav.text)
                 count += 1
             max_id = res.max_id
@@ -62,7 +61,6 @@ class TwitterScraper(object):
         print("Scraping user: ", user_data.userid)
         try:
             twitter_creds = user_data.services['twitter']
-            print(twitter_creds)
         except:
             return False
         if 'denied' in twitter_creds:

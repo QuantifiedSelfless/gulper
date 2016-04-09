@@ -92,7 +92,6 @@ class GMailScraper(object):
         sent_to = to_field.split(', ')
         names = []
         for i in sent_to:
-            print(i)
             thing = (i.split(' <')[0])
             names.append(thing)
         return names

@@ -21,7 +21,7 @@ detector = dlib.get_frontal_face_detector()
 
 
 def load_data(fname):
-    abs_path = './data/pr0n/{0[0]}/{0[1]}/{0}'.format(fname)
+    abs_path = './data/pr0n/backend/{0[0]}/{0[1]}/{0}'.format(fname)
     with open(abs_path, 'rb') as fd:
         return pickle.load(fd)
 
@@ -51,7 +51,7 @@ def skip_unfound(_iter):
 
 
 @gen.coroutine
-def process_subreddit(subreddit, data_path='./data/pr0n/'):
+def process_subreddit(subreddit, data_path='./data/pr0n/backend/'):
     reddit = praw.Reddit(user_agent='gulperpr0n')
     submissions = skip_unfound(chain(
         reddit.get_subreddit(subreddit).get_hot(),
@@ -94,6 +94,8 @@ def process_subreddit(subreddit, data_path='./data/pr0n/'):
             'url': url,
             'uid': uid,
             'rects': rects[0],
+            'pose': poses[0],
+            'score': scores[0],
             'face_hash': face_hash,
             'reddit_submission': submission,
         }
@@ -138,5 +140,4 @@ def process_subreddits():
 
 
 if __name__ == "__main__":
-    subreddits = "GentlemanBoners BeautifulFemales prettygirls attractivemen ".split()
     ioloop.IOLoop().instance().run_sync(process_subreddits)

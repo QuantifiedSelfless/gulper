@@ -113,13 +113,22 @@
 
     *------------------------*    
 
-    'gphotos' : {
-        'photos' : {
-            'photo' : {
-                'faces' :
-            }
+    'gphotos' : [
+        {
+            'faces': : [
+                {
+                    'rect' : (x0, y0, x1, y1),
+                    'score' : float,
+                    'pose' : int,
+                    'face_hash' : float[128]
+                }
+            ]
+            ... 
+            data from:
+            https://developers.google.com/drive/v3/reference/files#resource-representations
+            ...
         }
-    }
+    ]
 
     *------------------------*    
 
@@ -135,17 +144,56 @@
 
     *------------------------*    
 
-    'fbphotos' : [{
-        'photo' : {
-            'image' : {
-                'width' : 
-                'height' :
-                'tags' :
-                'data'  :
+    'fbphotos' : {
+        "me": [
+            {
+                ...
+                fields from:
+                https://developers.facebook.com/docs/graph-api/reference/photo/
+                ...
+                'faces' : [
+                    {
+                        'rect' : (x0, y0, x1, y1),
+                        'score' : float,
+                        'pose' : int,
+                        'face_hash' : float[128]
+                    }
+                ]
             }
-        },
-        'faces' : [, ]
-    }],
+        ],
+        "friends": [
+            {
+                ...
+                fields from:
+                https://developers.facebook.com/docs/graph-api/reference/photo/
+                ...
+                'faces' : [
+                    {
+                        'rect' : (x0, y0, x1, y1),
+                        'score' : float,
+                        'pose' : int,
+                        'face_hash' : float[128]
+                    }
+                ]
+            }
+        ],
+        "uploaded": [
+            {
+                ...
+                fields from:
+                https://developers.facebook.com/docs/graph-api/reference/photo/
+                ...
+                'faces' : [
+                    {
+                        'rect' : (x0, y0, x1, y1),
+                        'score' : float,
+                        'pose' : int,
+                        'face_hash' : float[128]
+                    }
+                ]
+            }
+        ],
+    },
 
     *------------------------*    
 
@@ -165,4 +213,3 @@
     }
     
 }
-              
