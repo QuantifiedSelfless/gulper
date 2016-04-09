@@ -155,7 +155,7 @@ class TruthProcessor(BaseProcessor):
         if user_data.data['gtext'] is not False:
             gpeople = itertools.chain.from_iterable(
                 user_data.data['gtext']['people'])
-            cleaned = self.check_names(gpeople)
+            cleaned = self.check_names(gpeople, user_data.name.split(' ')[-1])
             true, lie = self.common_email_contact(cleaned)
             if random.randint(0, 1) == 0:
                 truth_data['true'].append(
