@@ -2,6 +2,7 @@ from tornado import gen
 
 from ...basehandler import BaseHandler
 from ...user import User
+from ...database.db import get_user
 
 
 def make_handler(handler):
@@ -11,7 +12,11 @@ def make_handler(handler):
             userid = self.get_argument('userid')
             privatekey_pem = self.get_argument('privatekey', None)
             publickey_pem = self.get_argument('publickey', None)
-            user = User(userid, publickey_pem=publickey_pem, privatekey_pem=privatekey_pem)
+            user_blob = get_user(userid)
+            user_name = user_blob['name']
+            user = User(userid, user_name,
+                        publickey_pem=publickey_pem,
+                        privatekey_pem=privatekey_pem)
             data = yield handler(user, self)
             return self.api_response(data)
     return ProcAPIHandler
