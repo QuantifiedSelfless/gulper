@@ -107,19 +107,19 @@ class NewsProcessor(object):
         """
         data = {}
         data['category'] = None
-        if user_data['fbprofile'] is not False:
-            data['category'] = self.fb_proxy(user_data['fbprofile'])
+        if user_data.data['fbprofile'] is not False:
+            data['category'] = self.fb_proxy(user_data.data['fbprofile'])
         if data['category'] is None:
-            if user_data['reddit'] is not False:
-                data['category'] = self.reddit_proxy(user_data['reddit'])
+            if user_data.data['reddit'] is not False:
+                data['category'] = self.reddit_proxy(user_data.data['reddit'])
         if data['category'] is None:
-            if user_data['fblikes'] is not False:
-                data['category'] = self.like_lookup(user_data['fblikes'])
+            if user_data.data['fblikes'] is not False:
+                data['category'] = self.like_lookup(user_data.data['fblikes'])
         if data['category'] is None:
-            if user_data['twitter'] is not False:
-                data['category'] = self.follow_lookup(user_data['twitter'])
+            if user_data.data['twitter'] is not False:
+                data['category'] = self.follow_lookup(user_data.data['twitter'])
         if data['category'] is None:
-            data['cateogry'] = random.randint(0, 5)
+            data['category'] = random.randint(0, 5)
         self.save_user(data, user_data)
 
     def save_user(self, data, user_data):
