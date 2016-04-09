@@ -7,6 +7,7 @@ from collections import Counter
 import ujson as json
 import itertools
 import re
+import random
 
 
 class TruthProcessor(BaseProcessor):
@@ -23,6 +24,20 @@ class TruthProcessor(BaseProcessor):
             self.logger.info("Loaded stop words for analysis")
         except (IOError, ValueError):
             self.logger.info("Stop words not availble")
+        try:
+            fd = open('lib/fakefacts.txt', 'r')
+            raw = fd.read()
+            fd.close()
+            self.fakefacts = raw.split('\n')
+        except (IOError, ValueError):
+            self.logger.info("Couldn't find fake facts")
+        try:
+            fd = open('lib/realfacts.txt', 'r')
+            raw = fd.read()
+            fd.close()
+            self.realfacts = raw.split('\n')
+        except (IOError, ValueError):
+            self.logger.info("Couldn't find real facts")
 
     def get_words(self, text_list):
         words = []
@@ -38,6 +53,65 @@ class TruthProcessor(BaseProcessor):
         aux.reverse()
         return aux
 
+    def get_num_uses(self, word, wordfreq):
+        for word in wordfreq:
+            if word[1] == word:
+                return word[0]
+        return 0
+
+    def get_percentage(self, word, text_list):
+        total = float(len(text_list))
+        count = 0
+        for text in text_list:
+            words = text.split()
+            if word in text:
+                count += 1
+        return count/total
+
+    def common_subreddit(self, subs):
+        allsubs = []
+        for sub in subs:
+            allsubs.append(sub)
+        highest = 0
+        the_one = None
+        for sub in allsubs:
+            total = allsubs.count(sub)
+            if total > highest:
+                highest = total
+                the_one = sub
+        unique = set(allsubs)
+        allsubs = list(unique)
+        allsubs.remove(the_one)
+        lie = random.choice(allsubs)
+        return the_one, lie
+
+    def check_names(self, names, lastname):
+        """
+        Check if it's an email address or self
+        """
+        good_names = []
+        for name in names:
+            me = re.search(lastname, name)
+            if me:
+                continue
+            else:
+                good_names.append(name)
+        return good_names
+
+    def common_email_contact(self, people):
+        highest = 0
+        person = None
+        for name in people:
+            total = people.count(name)
+            if total > highest:
+                highest = total
+                person = name
+        unique = set(people)
+        people = list(unique)
+        people.remove(person)
+        lie = random.choice(person)
+        return person, lie
+
     @gen.coroutine
     def process(self, user_data):
         """
@@ -51,13 +125,30 @@ class TruthProcessor(BaseProcessor):
         - Most liked stuff
         - Political Stuff (ie, how political are you)
         - Common words
-        - Time said Worst
+        - Times said Worst
         - Times said Best
+        - Comment karma
+        - Twitter
+        - Swear words
+        - times saying 'me'
         """
         truth_data = {}
         truth_data['name'] = user_data.name
         truth_data['true'] = []
         truth_data['false'] = []
+
+        if user_data['gtext'] is not False:
+            gpeople = itertools.chain.from_iterable(
+                user_data['gtext']['people'])
+            cleaned = self.check_names(gpeople)
+            true, lie = self.common_email_contact(cleaned)
+            if random.randint(0, 1) == 0:
+                truth_data['true'].append(
+                    "Your most common gmail contact is {0}".format(true))
+            else:
+                truth_data['false'].append(
+                    "Your most common gmail contact is {0}".format(lie))
+            
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
