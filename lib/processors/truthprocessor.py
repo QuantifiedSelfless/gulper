@@ -200,7 +200,7 @@ class TruthProcessor(BaseProcessor):
             text_list = [post['text'] for post in user_data.data['fbtext']['text']]
             fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
-            truth_data['true'], truth_data['false'] = self.get_percentage(
+            truth_data['true'], truth_data['false'] = self.percentage_check(
                     'me', text_list, .1,
                     "You use the word \"me\" in {0}\% of your facebook posts",
                     truth_data['true'], truth_data['false'])
