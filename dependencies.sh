@@ -1,7 +1,7 @@
 echo "Installing system packages"
 sudo apt-get install \
     libatlas-base-dev gfortran \
-    libjpeg-dev libtiff-dev libjasper-dev libpng12-dev \
+    libjpeg-dev libtiff5-dev libjasper-dev libpng12-dev \
     libavcodec-dev libavformat-dev libswscale-dev libv4l-dev \
     build-essential cmake git pkg-config libreadline-dev \
     libboost-python-dev python3 python3-dev python3-pip \
@@ -22,7 +22,7 @@ if [ $memory -lt 2048 ]; then
     exit 0
 fi
 
-if ! python3 -c 'import cv2'; then
+if ! python3.5 -c 'import cv2'; then
     echo "Installing numpy"
     sudo pip3 install numpy
     sleep 5
@@ -37,7 +37,7 @@ if ! python3 -c 'import cv2'; then
     cmake \
         -D CMAKE_BUILD_TYPE=Release \
         -D CMAKE_INSTALL_PREFIX=/usr/local \
-        -D PYTHON3_EXECUTABLE=/usr/bin/python3 \
+        -D PYTHON3_EXECUTABLE=/usr/bin/python3.5 \
         .. && \
     make && \
     sudo make install || exit 0
