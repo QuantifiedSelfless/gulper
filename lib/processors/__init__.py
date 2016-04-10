@@ -7,6 +7,8 @@ from .truthprocessor import TruthProcessor
 from .mirrorprocessor import MirrorProcessor
 from .newsprocessor import NewsProcessor
 from .ownupprocessor import OwnupProcessor
+from .interviewprocessor import InterviewProcessor
+from .ameliaprocessor import AmeliaProcessor
 
 
 processors = [
@@ -14,8 +16,10 @@ processors = [
     Pr0nProcessor(),
     TruthProcessor(),
     MirrorProcessor(),
-    NewsProcessor()
-    OwnupProcessor()
+    NewsProcessor(),
+    OwnupProcessor(),
+    InterviewProcessor(),
+    AmeliaProcessor()
 ]
 
 
