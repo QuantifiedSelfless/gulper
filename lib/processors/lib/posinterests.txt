@@ -19,3 +19,5 @@ fraternity
 sorority
 country club
 golf
+programming
+compsci
