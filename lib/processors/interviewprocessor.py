@@ -75,7 +75,7 @@ class InterviewProcessor(BaseProcessor):
         except (IOError, ValueError):
             self.logger.info("No good events loaded")
 
-    def scan_pos_tokens(self, alltext, missing_ones, counts, quotes):
+    def scan_pos_tokens(self, alltext, counts, quotes):
         wordlists = [self.healthwords, self.poswork]
         for wlist in wordlists:
             for token in wlist:
@@ -86,13 +86,8 @@ class InterviewProcessor(BaseProcessor):
                             counts[token] += 1
                         else:
                             counts[token] = 1
-            if token not in counts:
-                missing_ones.append(token)
-            else:
-                if token in missing_ones:
-                    missing_ones.remove(token)
 
-        return counts, quotes, missing_ones
+        return counts, quotes
 
     def scan_neg_tokens(self, alltext, counts, quotes):
         wordlists = [self.partywords, self.negwork, self.skepwords]
@@ -189,13 +184,12 @@ class InterviewProcessor(BaseProcessor):
         pos_quotes = []
         neg_counts = {}
         neg_quotes = []
-        missing = set()
         if user_data.data.get('fbtext'):
             fb_text = [text['text'] for text in user_data.data['fbtext']]
             neg_counts, neg_quotes = self.scan_neg_tokens(
                 fb_text, neg_counts, neg_quotes)
-            pos_counts, pos_quotes, missing = self.scan_pos_tokens(
-                fb_text, missing, pos_counts, pos_quotes)
+            pos_counts, pos_quotes = self.scan_pos_tokens(
+                fb_text, pos_counts, pos_quotes)
 
         pos_interests = []
         neg_interests = []
@@ -203,8 +197,8 @@ class InterviewProcessor(BaseProcessor):
             tweets = user_data.data['twitter']['tweets']
             neg_counts, neg_quotes = self.scan_neg_tokens(
                 tweets, neg_counts, neg_quotes)
-            pos_counts, pos_quotes, missing = self.scan_pos_tokens(
-                tweets, missing, pos_counts, pos_quotes)
+            pos_counts, pos_quotes = self.scan_pos_tokens(
+                tweets, pos_counts, pos_quotes)
             following = [follow for follow['name'] in user_data.data['twitter']['following']]
             neg_interests = self.scan_neg_interests(
                 neg_interests, following)
