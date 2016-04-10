@@ -185,7 +185,7 @@ class InterviewProcessor(BaseProcessor):
         neg_counts = {}
         neg_quotes = []
         if user_data.data.get('fbtext'):
-            fb_text = [text['text'] for text in user_data.data['fbtext']]
+            fb_text = [text['text'] for text in user_data.data['fbtext']['text']]
             neg_counts, neg_quotes = self.scan_neg_tokens(
                 fb_text, neg_counts, neg_quotes)
             pos_counts, pos_quotes = self.scan_pos_tokens(
