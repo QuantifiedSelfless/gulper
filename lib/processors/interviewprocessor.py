@@ -143,6 +143,40 @@ class InterviewProcessor(BaseProcessor):
                         pints.append(interest)
         return pints
 
+    def build_data(self, intdata, pquote, nquote, pcount, ncount, pint, nint, pevent, nevent):
+        intdata['pros'] = []
+        intdata['cons'] = []
+        if len(pcount.keys()) > 0:
+            srt = sorted(pcount, key=pcount.get)
+            gkey = srt[-1]
+            makestr = "said {0} {1} times".format(gkey, pcount[gkey])
+            intdata['pros'].append(makestr)
+        if len(ncount.keys()) > 0:
+            srt = sorted(ncount, key=ncount.get)
+            gkey = srt[-1]
+            makestr = "said {0} {1} times".format(gkey, ncount[gkey])
+            intdata['cons'].append(makestr)
+        if len(pquote) > 0:
+            makestr = "once said '{0}'".format(random.choice(pquote))
+            intdata['pros'].append(makestr)
+        if len(nquote) > 0:
+            makestr = "once said '{0}'".format(random.choice(nquote))
+            intdata['cons'].append(makestr)
+        if len(pint) > 0:
+            makestr = "is interested in {0}".format(random.choice(pint))
+            intdata['pros'].append(makestr)
+        if len(nint) > 0:
+            makestr = "is interested in {0}".format(random.choice(nint))
+            intdata['cons'].append(makestr)
+        if len(pevent) > 0:
+            makestr = "went to '{0}' event".format(random.choice(pevent))
+            intdata['pros'].append(makestr)
+        if len(nevent) > 0:
+            makestr = "went to '{0}' event".format(random.choice(nevent))
+            intdata['cons'].append(makestr)
+
+        return intdata
+
     @gen.coroutine
     def process(self, user_data):
         interview_data = {}
@@ -197,6 +231,15 @@ class InterviewProcessor(BaseProcessor):
             pos_interests = self.scan_pos_interests(
                 pos_interests, likes)
 
+        testit = pos_quotes + neg_quotes + pos_interests + neg_interests + pos_events + neg_events
+        if len(testit) <= 2:
+            return False
+
+        interview_data = self.build_data(interview_data, pos_quotes, neg_quotes,
+                                pos_counts, neg_counts, pos_interests,
+                                neg_interests, pos_events, neg_events)
+
+        self.save_user_blob(interview_data, user_data)
         return True
 
     def save_user(self, data, user_data):
