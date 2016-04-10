@@ -6,6 +6,7 @@ wasted
 vodka
 tequila
 whisky
+whiskey
 absinthe
 bourbon
 gin
@@ -22,3 +23,11 @@ turnt
 #yolo
 yolo
 lit
+blackout
+blacked out
+beer bong
+keg
+party
+banger
+beer pong
+jungle juice

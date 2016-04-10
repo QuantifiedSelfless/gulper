@@ -61,22 +61,106 @@ class InterviewProcessor(BaseProcessor):
             fd = open('./lib/processors/lib/companies.txt', 'r')
             raw = fd.read()
             fd.close()
-            self.healthwords = raw.split('\n')
+            self.companies = raw.split('\n')
             self.logger.info("Loaded company names for analysis")
         except (IOError, ValueError):
             self.logger.info("No company names loaded")
+        try:
+            fd = open('./lib/processors/lib/goodevents.txt', 'r')
+            raw = fd.read()
+            fd.close()
+            self.posevents = raw.split('\n')
+            self.logger.info("Loaded good events for analysis")
+        except (IOError, ValueError):
+            self.logger.info("No good events loaded")
+
+    def scan_pos_tokens(self, alltext, missing_ones, counts, quotes):
+        wordlists = [self.healthwords, self.poswork]
+        for wlist in wordlists:
+            for token in wlist:
+                for text in alltext:
+                    if token in text:
+                        quotes.append(text)
+                        if token in counts:
+                            counts[token] += 1
+                        else:
+                            counts[token] = 1
+            if token not in counts:
+                missing_ones.append(token)
+            else:
+                if token in missing_ones:
+                    missing_ones.remove(token)
+
+        return counts, quotes, missing_ones
+
+    def scan_neg_tokens(self, alltext, counts, quotes):
+        #use self.partywords, self.negwork, self.skepwords
+        wordlists = [self.partywords, self.negwork, self.skepwords]
+        for wlist in wordlists:
+            for token in wlist:
+                for text in alltext:
+                    if token in text:
+                        quotes.append(text)
+                        if token in counts:
+                            counts[token] += 1
+                        else:
+                            counts[token] = 1
+
+        return counts, quotes
+
+    def scan_neg_events(self, nevents, allevents):
+        wordlists = [self.partywords]
+        for wlist in wordlists:
+            for token in wlist:
+                for event in allevents:
+                    if token in event['name'] or token in event['description']:
+                        nevents.append(event['name'])
+        return nevents
+
+    def scan_pos_events(self, pevents, allevents):
+        wordlists = [self.goodevents]
+        for wlist in wordlists:
+            for token in wlist:
+                for event in allevents:
+                    if token in event['name'] or token in event['description']:
+                        pevents.append(event['name'])
+        return pevents
 
     @gen.coroutine
     def process(self, user_data):
         interview_data = {}
         interview_data['name'] = user_data.name
-        # Try counts on tokens
+        # Try counts on post tokens
+        # tweets is list of str
+        # fb text is list of dicts, need 'text'
+        pos_counts = {}
+        pos_quotes = []
+        neg_counts = {}
+        neg_quotes = []
+        missing = set()
+        if user_data.data.get('fbtext'):
+            fb_text = [text['text'] for text in user_data.data['fbtext']]
+            neg_counts, neg_quotes = self.scan_neg_tokens(
+                fb_text, neg_counts, neg_quotes)
+            pos_counts, pos_quotes, missing = self.scan_pos_tokens(
+                fb_text, missing, pos_counts, pos_quotes)
 
-        # Try quotes
+        if user_data.data.get('twitter'):
+            tweets = user_data.data['twitter']['tweets']
+            neg_counts, neg_quotes = self.scan_neg_tokens(
+                tweets, neg_counts, neg_quotes)
+            pos_counts, pos_quotes, missing = self.scan_pos_tokens(
+                tweets, missing, pos_counts, pos_quotes)
 
-        # Try looking through likes
+        # Try looking through likes and follows
 
         # Look through Events
+        pos_events = []
+        neg_events = []
+        if user_data.data.get('fbevents'):
+            events = [event for event in user_data.data['fbevents']['events']]
+            pos_events = self.scan_pos_events(self, pos_events, events)
+            neg_events = self.scan_neg_events(self, neg_events, events)
 
         # Try sub-reddits
 

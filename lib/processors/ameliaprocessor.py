@@ -10,7 +10,7 @@ import random
 import os
 
 
-class InterviewProcessor(BaseProcessor):
+class AmeliaProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
