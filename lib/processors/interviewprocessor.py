@@ -58,11 +58,11 @@ class InterviewProcessor(BaseProcessor):
         except (IOError, ValueError):
             self.logger.info("No skepetical words loaded")
         try:
-            fd = open('./lib/processors/lib/companies.txt', 'r')
+            fd = open('./lib/processors/lib/posinterests.txt', 'r')
             raw = fd.read()
             fd.close()
-            self.companies = raw.split('\n')
-            self.logger.info("Loaded company names for analysis")
+            self.posinterests = raw.split('\n')
+            self.logger.info("Loaded positive interests for analysis")
         except (IOError, ValueError):
             self.logger.info("No company names loaded")
         try:
@@ -79,7 +79,7 @@ class InterviewProcessor(BaseProcessor):
         for wlist in wordlists:
             for token in wlist:
                 for text in alltext:
-                    if token in text:
+                    if token.lower() in text.lower():
                         quotes.append(text)
                         if token in counts:
                             counts[token] += 1
@@ -94,12 +94,11 @@ class InterviewProcessor(BaseProcessor):
         return counts, quotes, missing_ones
 
     def scan_neg_tokens(self, alltext, counts, quotes):
-        #use self.partywords, self.negwork, self.skepwords
         wordlists = [self.partywords, self.negwork, self.skepwords]
         for wlist in wordlists:
             for token in wlist:
                 for text in alltext:
-                    if token in text:
+                    if token.lower() in text.lower():
                         quotes.append(text)
                         if token in counts:
                             counts[token] += 1
@@ -109,22 +108,40 @@ class InterviewProcessor(BaseProcessor):
         return counts, quotes
 
     def scan_neg_events(self, nevents, allevents):
-        wordlists = [self.partywords]
+        wordlists = [self.partywords, self.negwork]
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
-                    if token in event['name'] or token in event['description']:
+                    if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
                         nevents.append(event['name'])
         return nevents
 
     def scan_pos_events(self, pevents, allevents):
-        wordlists = [self.goodevents]
+        wordlists = [self.goodevents, self.posinterests]
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
-                    if token in event['name'] or token in event['description']:
+                    if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
                         pevents.append(event['name'])
         return pevents
+
+    def scan_neg_interests(self, nints, interests):
+        wordlists = [self.skepwords, self.partywords, self.negwork]
+        for wlist in wordlists:
+            for token in wlist:
+                for interest in interests:
+                    if token.lower() in interest.lower():
+                        nints.append(interest)
+        return nints
+
+    def scan_pos_interests(self, pints, interests):
+        wordlists = [self.posinterests, self.posevents, self.healthwords]
+        for wlist in wordlists:
+            for token in wlist:
+                for interest in interests:
+                    if token.lower() in interest.lower():
+                        pints.append(interest)
+        return pints
 
     @gen.coroutine
     def process(self, user_data):
@@ -145,16 +162,20 @@ class InterviewProcessor(BaseProcessor):
             pos_counts, pos_quotes, missing = self.scan_pos_tokens(
                 fb_text, missing, pos_counts, pos_quotes)
 
+        pos_interests = []
+        neg_interests = []
         if user_data.data.get('twitter'):
             tweets = user_data.data['twitter']['tweets']
             neg_counts, neg_quotes = self.scan_neg_tokens(
                 tweets, neg_counts, neg_quotes)
             pos_counts, pos_quotes, missing = self.scan_pos_tokens(
                 tweets, missing, pos_counts, pos_quotes)
+            following = [follow for follow['name'] in user_data.data['twitter']['following']]
+            neg_interests = self.scan_neg_interests(
+                neg_interests, following)
+            pos_interests = self.scan_pos_interests(
+                pos_interests, following)
 
-        # Try looking through likes and follows
-
-        # Look through Events
         pos_events = []
         neg_events = []
         if user_data.data.get('fbevents'):
@@ -162,7 +183,19 @@ class InterviewProcessor(BaseProcessor):
             pos_events = self.scan_pos_events(self, pos_events, events)
             neg_events = self.scan_neg_events(self, neg_events, events)
 
-        # Try sub-reddits
+        if user_data.data.get('reddit'):
+            subs = [sub['name'] for sub in user_data.data['reddit']['subs']]
+            neg_interests = self.scan_neg_interests(
+                neg_interests, subs)
+            pos_interests = self.scan_pos_interests(
+                pos_interests, subs)
+
+        if user_data.data.get('fblikes'):
+            likes = user_data.data['fblikes']
+            neg_interests = self.scan_neg_interests(
+                neg_interests, likes)
+            pos_interests = self.scan_pos_interests(
+                pos_interests, likes)
 
         return True
 

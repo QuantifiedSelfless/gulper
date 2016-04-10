@@ -25,12 +25,12 @@ class AmeliaProcessor(BaseProcessor):
 
     @gen.coroutine
     def process(self, user_data):
-        person = user_data.name
         if user_data.data.get('fbprofile'):
+            person = user_data.data['fbprofile']['id']
             if user_data.data['fbprofile'].get('work'):
                 if user_data.data['fbprofile'].get('hometown'):
                     if user_data.data['fbprofile'].get('education'):
-                        self.names['names'].append(person)
+                        self.names['ids'].append(person)
                         self.save_names(self, self.names)
         return False
 
