@@ -156,38 +156,16 @@ class Pr0nProcessor(BaseProcessor):
             'images_to_scores': images_to_scores,
             'engine': user_engine,
         }
-        self.save_user(blob, user_data)
+        self.save_user_blob(blob, user_data)
         self.logger.info("Saved pr0n data")
         return True
-
-    def save_user(self, blob, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/pr0n/user/{}.pkl".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                pickle.dump(blob, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(blob)
-            filename = "./data/pr0n/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/pr0n/user/{}.pkl".format(user.userid)
-            with open(filename, 'rb') as fd:
-                return pickle.load(fd)
-        else:
-            filename = "./data/pr0n/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
 
     @gen.coroutine
     def get_sample(self, user, request):
         """
         Gets an image to show to the user
         """
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         images_data = data['images_to_scores']
         names_data = data['names_to_scores']
         # filter images the user hasn't seen yet
@@ -225,7 +203,7 @@ class Pr0nProcessor(BaseProcessor):
         """
         image_id = request.get_argument("id")
         preference = int(request.get_argument("preference"))
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         images_data = data['images_to_scores']
         names_data = data['names_to_scores']
 
@@ -243,7 +221,7 @@ class Pr0nProcessor(BaseProcessor):
             dist = float(dist)
             names_data[name]['scores']['similar'] += preference / dist
             names_data[name]['normalization']['similar'] += 1.0 / dist
-        self.save_user(data, user)
+        self.save_user_blob(data, user)
 
     @gen.coroutine
     def get_results(self, user, request):
@@ -251,7 +229,7 @@ class Pr0nProcessor(BaseProcessor):
         Gets the results for a particular user.  Right now this is a simple
         metric... but it seems to be good enough.
         """
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         scores = []
         for name, data in data['names_to_scores'].items():
             name_score = data['scores']['name'] / \
