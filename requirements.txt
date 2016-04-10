@@ -4,7 +4,9 @@ git+https://github.com/dianakhuang/pytumblr.git@diana/python-3-support
 tweepy
 pillow
 dlib
-pytumblr
 praw
 git+https://github.com/pythonforfacebook/facebook-sdk.git
-nearpy
+git+https://github.com/pixelogik/NearPy.git
+ujson
+spotipy
+rethinkdb
