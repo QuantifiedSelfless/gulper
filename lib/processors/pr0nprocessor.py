@@ -28,6 +28,7 @@ class Pr0nProcessor(BaseProcessor):
             self.logger.info("Recreating backend engine")
             self.pr0n_engine = self.create_engine()
             self.read_pr0n()
+            os.makedirs('./data/pr0n/', exist_ok=True)
             with open(fname, 'wb+') as fd:
                 pickle.dump(self.pr0n_engine, fd)
 
