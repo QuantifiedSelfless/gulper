@@ -19,7 +19,7 @@ class DebugProcessor(BaseProcessor):
         filename = "./data/debug/{}.pkl".format(user_data.userid)
         with open(filename, 'wb+') as fd:
             pickle.dump(user_data.data, fd)
-        self.logger.info("Saved used {} to {}".format(user_data.userid, filename))
+        self.logger.info("Saved user {} to {}".format(user_data.userid, filename))
         return True
 
     def register_handlers(self):
