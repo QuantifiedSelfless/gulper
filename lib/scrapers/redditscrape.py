@@ -52,7 +52,6 @@ class RedditScraper(object):
         for i in r.get_inbox():
             if count > self.num_scrape:
                 break
-            print(i)
             load = {}
             load['body'] = i.body
             if i.author:
