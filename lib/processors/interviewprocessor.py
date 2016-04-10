@@ -11,6 +11,7 @@ import os
 
 
 class InterviewProcessor(BaseProcessor):
+    name = 'interview_processor'
 
     def __init__(self):
         super().__init__()

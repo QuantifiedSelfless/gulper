@@ -9,6 +9,7 @@ import os
 
 
 class AmeliaProcessor(BaseProcessor):
+    name = 'amelia_processor'
 
     def __init__(self):
         super().__init__()
