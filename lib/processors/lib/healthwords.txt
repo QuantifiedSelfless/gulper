@@ -10,3 +10,6 @@ hiked
 vegan
 vegetarian
 salad
+organic
+kale
+yoga

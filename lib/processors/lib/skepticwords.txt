@@ -1,6 +1,6 @@
 snowden
 manning
-panama
+panama papers
 encrypt
 encryption
 bitcoin
@@ -12,3 +12,5 @@ domestic surveillence
 sureveillence
 1984
 brave new world
+malware
+NSA
