@@ -68,6 +68,17 @@ class InterviewProcessor(BaseProcessor):
 
     @gen.coroutine
     def process(self, user_data):
+        interview_data = {}
+        interview_data['name'] = user_data.name
+        # Try counts on tokens
+
+        # Try quotes
+
+        # Try looking through likes
+
+        # Look through Events
+
+        # Try sub-reddits
 
         return True
 
