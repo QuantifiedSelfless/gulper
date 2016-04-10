@@ -33,7 +33,6 @@ class MirrorProcessor(BaseProcessor):
         """
         good_names = []
         for name in names:
-            print(name)
             email = re.search('@', name)
             me = re.search(lastname, name)
             if email or me:
@@ -48,7 +47,6 @@ class MirrorProcessor(BaseProcessor):
         """
         Process the scraped data inside of user_data and save it locally.  It
         can save it to file, or a database... no one really cares
-        TODO: For next show, add calendar events, subreddits, etc.
         """
         self.logger.info("Processing user: {}".format(user_data.userid))
         first, last = self.user_name(user_data.name)
