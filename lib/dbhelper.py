@@ -7,6 +7,7 @@ from .config import CONFIG
 
 r.set_loop_type("tornado")
 FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
+object_cache = {}
 
 
 class RethinkDB(object):
@@ -16,6 +17,22 @@ class RethinkDB(object):
         self.tables = tables
         logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("rethinkdb." + dbname)
+
+    @classmethod
+    @gen.coroutine
+    def get_global(cls):
+        global object_cache
+        db = object_cache.get(cls)
+        if db is None:
+            object_cache[cls] = True
+            db = cls()
+            yield db.init()
+            object_cache[cls] = db
+        elif db is True:
+            while db is True:
+                yield gen.sleep(0)
+                db = object_cache.get(cls)
+        return db
 
     @gen.coroutine
     def connection(self):

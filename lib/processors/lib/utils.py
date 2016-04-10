@@ -1,6 +1,6 @@
 from tornado import gen
 
-from .exhibit_permissions import exhibit_permissions
+from .exhibit_permissions import ExhibitPermissions
 from ...basehandler import BaseHandler
 from ...user import User
 
@@ -13,7 +13,7 @@ def make_handler(name, handler):
             privatekey_pem = self.get_argument('privatekey', None)
             publickey_pem = self.get_argument('publickey', None)
 
-            exibperm = yield exhibit_permissions()
+            exibperm = yield ExhibitPermissions.get_global()
             permission = yield exibperm.has_permission(userid, name)
             if permission is not True:
                 return self.error(403, "NO_ACCESS")

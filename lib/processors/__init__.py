@@ -1,6 +1,6 @@
 from tornado import gen
 
-from .lib.exhibit_permissions import exhibit_permissions
+from .lib.exhibit_permissions import ExhibitPermissions
 from .debugprocessor import DebugProcessor
 from .pr0nprocessor import Pr0nProcessor
 
@@ -14,7 +14,7 @@ processors = [
 @gen.coroutine
 def process(user_data):
     result = {}
-    exibperm = yield exhibit_permissions()
+    exibperm = yield ExhibitPermissions.get_global()
     for p in processors:
         try:
             permission = yield p.process(user_data)
