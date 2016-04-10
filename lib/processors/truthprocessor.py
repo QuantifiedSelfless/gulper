@@ -257,6 +257,10 @@ class TruthProcessor(BaseProcessor):
         self.save_user(truth_data, user_data)
         self.logger.info("Saved truth game data")
 
+        # Need to make final determination on whether we want to use
+        # real world facts. If we are, we can let everyone play 
+        return True
+
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
             filename = "./data/truth/user/{}.json".format(user_data.userid)

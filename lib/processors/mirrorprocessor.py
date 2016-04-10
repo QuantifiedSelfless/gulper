@@ -87,6 +87,7 @@ class MirrorProcessor(BaseProcessor):
         self.save_user(mirror_data, user_data)
 
         self.logger.info("Saved mirror data")
+        return True
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':

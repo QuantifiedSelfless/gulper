@@ -121,6 +121,7 @@ class NewsProcessor(object):
         if data['category'] is None:
             data['category'] = random.randint(0, 5)
         self.save_user(data, user_data)
+        return True
 
     def save_user(self, data, user_data):
         if CONFIG.get('_mode') == 'dev':
