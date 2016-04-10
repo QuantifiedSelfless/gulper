@@ -1,0 +1,12 @@
+bike
+jog
+run
+ran
+jogged
+biked
+climb
+climbed
+hiked
+vegan
+vegetarian
+salad
