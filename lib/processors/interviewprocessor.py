@@ -113,7 +113,7 @@ class InterviewProcessor(BaseProcessor):
         return nevents
 
     def scan_pos_events(self, pevents, allevents):
-        wordlists = [self.goodevents, self.posinterests]
+        wordlists = [self.posevents, self.posinterests]
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
@@ -199,7 +199,7 @@ class InterviewProcessor(BaseProcessor):
                 tweets, neg_counts, neg_quotes)
             pos_counts, pos_quotes = self.scan_pos_tokens(
                 tweets, pos_counts, pos_quotes)
-            following = [follow for follow['name'] in user_data.data['twitter']['following']]
+            following = [follow['name'] for follow in user_data.data['twitter']['following']]
             neg_interests = self.scan_neg_interests(
                 neg_interests, following)
             pos_interests = self.scan_pos_interests(
@@ -209,8 +209,8 @@ class InterviewProcessor(BaseProcessor):
         neg_events = []
         if user_data.data.get('fbevents'):
             events = [event for event in user_data.data['fbevents']['events']]
-            pos_events = self.scan_pos_events(self, pos_events, events)
-            neg_events = self.scan_neg_events(self, neg_events, events)
+            pos_events = self.scan_pos_events(pos_events, events)
+            neg_events = self.scan_neg_events(neg_events, events)
 
         if user_data.data.get('reddit'):
             subs = [sub['name'] for sub in user_data.data['reddit']['subs']]
