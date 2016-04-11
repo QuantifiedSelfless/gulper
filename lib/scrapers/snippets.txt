@@ -1,11 +1,14 @@
 drunk
 healthy
 fucked up
+bored
 my job
 at work
 I love
 I hate
 angry
+upset
+offended
 annoyed
 frustrated
 anxious
@@ -26,3 +29,7 @@ lucky
 gratful
 difficult
 unfair
+fun
+happiness
+despair
+patience

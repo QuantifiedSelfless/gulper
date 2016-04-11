@@ -52,10 +52,10 @@ class MirrorProcessor(BaseProcessor):
         first, last = self.user_name(user_data.name)
 
         mirror_data = {}
-        mirror_data['name'] = ' '.join([first, last])
+        mirror_data['name'] = user_data.name
         mirror_data['friends'] = []
-        if user_data.data['gtext'] is not False and user_data.data['gtext'] is not None:
-            if user_data.data['gtext']['people'] is not None:
+        if user_data.data.get('gtext'):
+            if user_data.data['gtext'].get('people'):
                 gpeople = itertools.chain.from_iterable(
                     user_data.data['gtext']['people'])
                 cleaned = self.check_names(gpeople, last)

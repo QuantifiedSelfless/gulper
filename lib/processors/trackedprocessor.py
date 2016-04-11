@@ -22,6 +22,21 @@ class TrackedProcessor(BaseProcessor):
         names = name.split(' ')
         return names[0], names[-1]
 
+    def check_names(self, names, lastname):
+        """
+        Check if it's an email address or self
+        """
+        good_names = []
+        for name in names:
+            email = re.search('@', name)
+            me = re.search(lastname, name)
+            if email or me:
+                continue
+            else:
+                good_names.append(name)
+        good_names = set(good_names)
+        return list(good_names)
+
     @gen.coroutine
     def process(self, user_data):
         # Generate some potential articles
@@ -33,6 +48,13 @@ class TrackedProcessor(BaseProcessor):
 
         tracking_data = {}
         tracking_data['messages'] = []
+        names = []
+        if user_data.data.get('gtext'):
+            gpeople = itertools.chain.from_iterable(
+                    user_data.data['gtext']['people'])
+            cleaned = self.check_names(gpeople, last)
+            names.append(cleaned)
+
 
         return True
 
