@@ -41,7 +41,7 @@ class TrackedProcessor(BaseProcessor):
             while len(sphrases) > 0:
                 pers = random.choice(gppl)
                 phr = sphrases.pop()
-                phrc = cphraes.pop()
+                phrc = cphrases.pop()
                 makestr = "{0} {1} {2}".format(pers, phrc, phr)
                 data['messages'].append(makestr)
         if len(redppl) > 0:
@@ -61,8 +61,6 @@ class TrackedProcessor(BaseProcessor):
 
     @gen.coroutine
     def process(self, user_data):
-        # Generate some potential articles
-        # Get some friends names
         # Add to the article.db
 
         self.logger.info("Processing user: {}".format(user_data.userid))
@@ -89,8 +87,8 @@ class TrackedProcessor(BaseProcessor):
         red_friends = []
         if user_data.data.get('reddit'):
             if len(user_data.data['reddit']['text']) > 0:
-                rtext = user_data['reddit']['text']
-                red_friends = [text['author'] for text in rtext if rtext['author'] is not None]
+                rtext = user_data.data['reddit']['text']
+                red_friends = [text['author'] for text in rtext if text.get('author', None) is not None]
 
         follows = []
         if user_data.data.get('twitter'):
@@ -126,5 +124,5 @@ class TrackedProcessor(BaseProcessor):
         to exhibits
         """
         return [
-            ('interview', self.tracking_messages),
+            ('tracking', self.tracking_messages),
         ]
