@@ -22,7 +22,7 @@ class AmeliaProcessor(BaseProcessor):
             self.logger.info("Loaded backend from save state")
         except (IOError, ValueError):
             self.logger.info("No names yet")
-            self.names = {"names": []}
+            self.names = {"ids": []}
 
     @gen.coroutine
     def process(self, user_data):
@@ -32,7 +32,8 @@ class AmeliaProcessor(BaseProcessor):
                 if user_data.data['fbprofile'].get('hometown'):
                     if user_data.data['fbprofile'].get('education'):
                         self.names['ids'].append(person)
-                        self.save_names(self, self.names)
+                        self.save_names(self.names, user_data)
+                        return True
         return False
 
     def save_names(self, data, user_data):
