@@ -9,6 +9,9 @@ from .newsprocessor import NewsProcessor
 from .ownupprocessor import OwnupProcessor
 from .interviewprocessor import InterviewProcessor
 from .ameliaprocessor import AmeliaProcessor
+from .mentalhealthprocessor import MentalHealthProcessor
+
+import traceback
 
 
 processors = [
@@ -20,6 +23,7 @@ processors = [
     OwnupProcessor(),
     InterviewProcessor(),
     AmeliaProcessor()
+    MentalHealthProcessor()
 ]
 
 
