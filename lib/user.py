@@ -2,12 +2,12 @@ import cryptohelper
 
 
 class User(object):
-    def __init__(self, userid, publickey_pem, name, services=None,
-                 privatekey_pem=None):
+    def __init__(self, userid, publickey_pem, services=None,
+                 privatekey_pem=None, meta=None):
         self.userid = userid
         self.services = services
         self.publickey_pem = publickey_pem
-        self.name = name
+        self.meta = meta or {}
         if publickey_pem is not None:
             self.publickey = cryptohelper.import_key(publickey_pem)
         else:
