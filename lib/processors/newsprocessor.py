@@ -1,10 +1,8 @@
 from tornado import gen
 from .lib.utils import process_api_handler
-from ..config import CONFIG
 
 import re
 import random
-import ujson as json
 import os
 
 
@@ -18,37 +16,43 @@ class NewsProcessor(object):
 
     def fb_proxy(self, prof):
         if 'political' in prof:
-            dem = re.search('dem', prof['political'])
-            liberal = re.search('liberal', prof['political'])
-            repub = re.search('repub', prof['political'])
-            cons = re.search('conservative', prof['political'])
+            dem = re.search('dem', prof['political'].lower())
+            liberal = re.search('liberal', prof['political'].lower())
+            repub = re.search('repub', prof['political'].lower())
+            cons = re.search('conservative', prof['political'].lower())
+            mod = re.search('moderate', prof['political'].lower())
+            cent = re.search('cent', prof['political'].lower())
             if dem:
-                return 2
-            if liberal:
                 return 1
+            if liberal:
+                return 0
             if repub:
                 return 3
             if cons:
                 return 5
+            if mod:
+                return 4
+            if cent:
+                return 2
         else:
             return None
 
     def reddit_proxy(self, prof):
         if 'subs' in prof:
             for sub in prof['subs']:
-                if sub['name'] == 'apple':
+                if 'apple' in sub['name'].lower():
                     return 4
-                if sub['name'] == 'the_donald':
+                if 'the_donald' in sub['name'].lower():
                     return 5
-                if sub['name'] == 'crypto':
+                if 'crypto' in sub['name'].lower():
                     return 1
-                if sub['name'] == 'hacking':
+                if 'hacking' in sub['name'].lower():
                     return 0
-                if sub['name'] == 'politics':
+                if 'politics' in sub['name'].lower():
                     return 2
-                if sub['name'] == 'news':
+                if 'news' in sub['name'].lower():
                     return 2
-                if sub['name'] == 'trees':
+                if 'trees' in sub['name'].lower():
                     return 3
         else:
             return None
@@ -77,27 +81,29 @@ class NewsProcessor(object):
             return None
 
     def follow_lookup(self, twit):
-        for follow in twit['following']:
-            apple = re.search('apple', follow['name'].lower())
-            nsa = re.search('nsa', follow['name'].lower())
-            hack = re.search('hack', follow['name'].lower())
-            snowden = re.search('snowden', follow['name'].lower())
-            books = re.search('book', follow['name'].lower())
-            data = re.search('data', follow['name'].lower())
-            if apple:
-                return 4
-            if nsa:
-                return 5
-            if hack:
-                return 3
-            if books:
-                return 2
-            if snowden:
-                return 0
-            if data:
-                return 1
-        else:
-            return None
+        if twit.get('following'):
+            for follow in twit['following']:
+                apple = re.search('apple', follow['name'].lower())
+                nsa = re.search('nsa', follow['name'].lower())
+                hack = re.search('hack', follow['name'].lower())
+                snowden = re.search('snowden', follow['name'].lower())
+                books = re.search('book', follow['name'].lower())
+                data = re.search('data', follow['name'].lower())
+                if apple:
+                    return 4
+                if nsa:
+                    return 5
+                if hack:
+                    return 3
+                if books:
+                    return 2
+                if snowden:
+                    return 0
+                if data:
+                    return 1
+            else:
+                return None
+        return None
 
     @gen.coroutine
     def process(self, user_data):
@@ -107,50 +113,29 @@ class NewsProcessor(object):
         """
         data = {}
         data['category'] = None
-        if user_data.data['fbprofile'] is not False:
+        if user_data.data.get('fbprofile'):
             data['category'] = self.fb_proxy(user_data.data['fbprofile'])
         if data['category'] is None:
-            if user_data.data['reddit'] is not False:
+            if user_data.data.get('reddit'):
                 data['category'] = self.reddit_proxy(user_data.data['reddit'])
         if data['category'] is None:
-            if user_data.data['fblikes'] is not False:
+            if user_data.data.get('fblikes'):
                 data['category'] = self.like_lookup(user_data.data['fblikes'])
         if data['category'] is None:
-            if user_data.data['twitter'] is not False:
+            if user_data.data.get('twitter'):
                 data['category'] = self.follow_lookup(user_data.data['twitter'])
         if data['category'] is None:
             data['category'] = random.randint(0, 5)
-        self.save_user(data, user_data)
+
+        self.save_user_blob(data, user_data)
         return True
-
-    def save_user(self, data, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/news/user/{}.json".format(user_data.userid)
-            with open(filename, 'w+') as fd:
-                json.dump(data, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(data)
-            filename = "./data/news/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/news/user/{}.json".format(user.userid)
-            with open(filename, 'r') as fd:
-                return json.load(fd)
-        else:
-            filename = "./data/news/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
 
     @gen.coroutine
     def get_category(self, user, request):
         """
         Returns relevant data that the exhibits may want to know
         """
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         return data
 
     @process_api_handler

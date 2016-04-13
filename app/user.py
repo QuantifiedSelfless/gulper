@@ -18,12 +18,12 @@ class UserProcess(BaseHandler):
     @web.asynchronous
     def post(self):
         userid = self.get_argument('userid')
-        publickey_pem = self.get_argument('publickey', None)
-        privatekey_pem = self.get_argument('privatekey', None)
-        name = self.get_argument('name', None)
         data = json.loads(self.request.body.decode())
-        user = User(userid, publickey_pem, name, privatekey_pem=privatekey_pem,
-                    services=data)
+        publickey_pem = data.get('publickey', None)
+        privatekey_pem = data.get('privatekey', None)
+        meta = data.get('meta', None)
+        user = User(userid, publickey_pem, privatekey_pem=privatekey_pem,
+                    services=data['services'], meta=meta)
         ioloop.IOLoop.current().add_callback(partial(userprocess, user))
         self.api_response("OK")
 
@@ -47,15 +47,16 @@ class ShowtimeProcess(BaseHandler):
         if show_data_raw.code != 200:
             return self.error(show_data_raw.code, show_data_raw.body)
         show_data = json.loads(show_data_raw.body)
+        show_date = show_data['data']['date']
         users_added = []
         for user_data in show_data['data']['users']:
             userid = user_data.pop('id')
             publickey = user_data['publickey']
-            privatekey = user_data['privatekey']
-            name = user_data['name']
-            user = User(userid, publickey, name,
-                        services=user_data['services'],
-                        privatekey_pem=privatekey)
+            privatekey = user_data.get('privatekey')
+            meta = user_data.get('meta') or {}
+            meta.update({'showid': showid, 'showdate': show_date})
+            user = User(userid, publickey, services=user_data['services'],
+                        privatekey_pem=privatekey, meta=meta)
             users_added.append(userid)
             ioloop.IOLoop.current().add_callback(partial(userprocess, user))
         return self.api_response(users_added)

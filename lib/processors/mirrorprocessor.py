@@ -1,13 +1,10 @@
 from tornado import gen
 from .lib.utils import process_api_handler
-from ..config import CONFIG
 from .lib.baseprocessor import BaseProcessor
 
-import ujson as json
 import re
 import itertools
 import random
-import os
 
 
 class MirrorProcessor(BaseProcessor):
@@ -20,14 +17,12 @@ class MirrorProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        if not os.path.exists("./data/mirror/user"):
-            os.makedirs("./data/mirror/user")
 
     def user_name(self, name):
         names = name.split(' ')
         return names[0], names[-1]
 
-    def check_names(self, names, lastname):
+    def check_names(self, names, lastname, my_email):
         """
         Check if it's an email address or self
         """
@@ -35,7 +30,8 @@ class MirrorProcessor(BaseProcessor):
         for name in names:
             email = re.search('@', name)
             me = re.search(lastname, name)
-            if email or me:
+            mine = re.search(my_email, name)
+            if email or me or mine:
                 continue
             else:
                 good_names.append(name)
@@ -49,7 +45,8 @@ class MirrorProcessor(BaseProcessor):
         can save it to file, or a database... no one really cares
         """
         self.logger.info("Processing user: {}".format(user_data.userid))
-        first, last = self.user_name(user_data.name)
+        first, last = self.user_name(user_data.meta['name'])
+        email = user_data.meta['email']
 
         mirror_data = {}
         mirror_data['name'] = user_data.name
@@ -58,7 +55,7 @@ class MirrorProcessor(BaseProcessor):
             if user_data.data['gtext'].get('people'):
                 gpeople = itertools.chain.from_iterable(
                     user_data.data['gtext']['people'])
-                cleaned = self.check_names(gpeople, last)
+                cleaned = self.check_names(gpeople, last, email)
                 mirror_data['friends'].append(cleaned)
             else:
                 mirror_data['friends'] = self.names
@@ -84,39 +81,17 @@ class MirrorProcessor(BaseProcessor):
             else:
                 mirror_data['work'].append("DesignCraft")
 
-        self.save_user(mirror_data, user_data)
+        self.save_user_blob(mirror_data, user_data)
 
         self.logger.info("Saved mirror data")
         return True
-
-    def save_user(self, data, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/mirror/user/{}.json".format(user_data.userid)
-            with open(filename, 'w+') as fd:
-                json.dump(data, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(data)
-            filename = "./data/mirror/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/mirror/user/{}.json".format(user.userid)
-            with open(filename, 'r') as fd:
-                return json.load(fd)
-        else:
-            filename = "./data/mirror/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
 
     @gen.coroutine
     def mirror_stuff(self, user, request):
         """
         Returns relevant data that the exhibits may want to know
         """
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         return data
 
     @process_api_handler
