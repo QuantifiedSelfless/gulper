@@ -54,7 +54,7 @@ class OwnupProcessor(BaseProcessor):
 
     def process_twitter(self, user_data, temp, perm):
         if user_data.data.get('twitter', None):
-            twitter = user_data.data.get('twitter')
+            twitter = user_data.data.get('twitter', None)
             if not twitter or len(perm) >= self.limit:
                 return
             tweets = twitter['tweets']
@@ -64,7 +64,7 @@ class OwnupProcessor(BaseProcessor):
 
     def process_reddit(self, user_data, temp, perm):
         if user_data.data.get('reddit', None):
-            reddit = user_data.data.get('reddit')
+            reddit = user_data.data.get('reddit', None)
             if not reddit or len(perm) >= self.limit:
                 return
             print(reddit.keys())
