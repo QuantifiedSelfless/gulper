@@ -4,7 +4,7 @@ from .lib.baseprocessor import BaseProcessor
 from .lib.jaccard import jaccard_rec
 
 
-class RecommnedProcessor(BaseProcessor):
+class RecommenderProcessor(BaseProcessor):
     name = 'recommend_processor'
 
     def __init__(self):

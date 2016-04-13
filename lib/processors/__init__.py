@@ -11,6 +11,7 @@ from .interviewprocessor import InterviewProcessor
 from .ameliaprocessor import AmeliaProcessor
 from .mentalhealthprocessor import MentalHealthProcessor
 from .trackedprocessor import TrackedProcessor
+from .recommenderprocessor import RecommenderProcessor
 
 processors = [
     Pr0nProcessor(),
