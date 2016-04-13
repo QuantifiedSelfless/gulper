@@ -15,7 +15,6 @@ class TrackedProcessor(BaseProcessor):
     def __init__(self):
         super().__init__()
 
-
     def user_name(self, name):
         names = name.split(' ')
         return names[0], names[-1]

@@ -11,9 +11,6 @@ from .interviewprocessor import InterviewProcessor
 from .ameliaprocessor import AmeliaProcessor
 from .mentalhealthprocessor import MentalHealthProcessor
 
-import traceback
-
-
 processors = [
     DebugProcessor(),
     Pr0nProcessor(),
@@ -22,7 +19,7 @@ processors = [
     NewsProcessor(),
     OwnupProcessor(),
     InterviewProcessor(),
-    AmeliaProcessor()
+    AmeliaProcessor(),
     MentalHealthProcessor()
 ]
 

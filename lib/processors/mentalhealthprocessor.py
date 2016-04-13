@@ -1,8 +1,5 @@
 from tornado import gen
-import traceback
-import ujson as json
 
-from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
@@ -10,7 +7,17 @@ from .lib.baseprocessor import BaseProcessor
 class MentalHealthProcessor(BaseProcessor):
     name = 'mental_health'
     limit = 200
-    keywords = ["concerned", "important", "love", "confused", "boredom", "greed", "amazing", "enjoyable", "terrible", "angry", "corrupt", "fun", "happiness", "comfort", "shitty", "nothing", "sharing", "privileged", "lucky", "grateful", "difficult", "impossible", "unfair", "exciting", "better", "worse", "upsetting", "easy", "boredom", "confusion", "pride", "confidence", "doubt", "fear", "disappointment", "diligence", "excitement", "sad", "interesting", "sexy", "love", "hate", "anxiety", "anger", "annoyance", "frustration", "empathy", "sympathy", "apathy", "concern", "sadness", "confusion", "condemnation", "anxiety", "enjoyment", "graciousness", "love", "hate", "impatience", "patience"]
+
+    def __init__(self):
+        super().__init__()
+        try:
+            fd = open('./lib/processors/lib/mentalwords.txt', 'r')
+            raw = fd.read()
+            fd.close()
+            self.keywords = raw.split('\n')
+            self.logger.info("Loaded stop words for analysis")
+        except (IOError, ValueError):
+            self.logger.info("Stop words not availble")
 
     def is_good_quote(self, text):
         text = text.lower()
@@ -37,13 +44,11 @@ class MentalHealthProcessor(BaseProcessor):
             for post in fbposts:
                 if not self.process_post(post['text'], quotes):
                     return
-        except Exception as ex:
+        except Exception:
             print('[MH] Exception occurred when processing facebook data.')
-            print(ex)
-            traceback.print_exc()
 
     def process_twitter(self, user_data, quotes):
-        try:
+        if user_data.data.get('twitter', None):
             twitter = user_data.data.get('twitter')
             if not twitter or len(quotes) >= self.limit:
                 return
@@ -51,13 +56,9 @@ class MentalHealthProcessor(BaseProcessor):
             for post in tweets:
                 if not self.process_post(post, quotes):
                     return
-        except Exception as ex:
-            print('[MH] Exception occured when processing twitter data.')
-            print(ex)
-            traceback.print_exc()
 
     def process_reddit(self, user_data, quotes):
-        try:
+        if user_data.data.get('reddit', None):
             reddit = user_data.data.get('reddit')
             if not reddit or len(quotes) >= self.limit:
                 return
@@ -66,13 +67,9 @@ class MentalHealthProcessor(BaseProcessor):
             for post in posts:
                 if not self.process_post(post['body'], quotes):
                     return
-        except Exception as ex:
-            print('[MH] Exception occured when processing reddit data.')
-            print(ex)
-            traceback.print_exc()
-    
+
     def process_gtext(self, user_data, quotes):
-        try:
+        if user_data.data.get('gtext', None):
             gtext = user_data.data.get('gtext')
             if not gtext or len(quotes) >= self.limit:
                 return
@@ -80,15 +77,10 @@ class MentalHealthProcessor(BaseProcessor):
             for post in posts:
                 if not self.process_post(post, quotes):
                     return
-        except Exception as ex:
-            print('[MH] Exception occured when processing gmail data.')
-            print(ex)
-            traceback.print_exc()
- 
+
     @gen.coroutine
     def process(self, user_data):
         self.logger.info("[MH] Processing user: {}".format(user_data.userid))
-        userid = user_data.userid
         quotes = []
         self.process_facebook(user_data, quotes)
         self.process_twitter(user_data, quotes)
@@ -97,43 +89,15 @@ class MentalHealthProcessor(BaseProcessor):
         print(quotes)
         if len(quotes) < 0:
             return False
-        self.save_user(quotes, user_data)
+        self.save_user_blob(quotes, user_data)
         return True
 
-    def save_user(self, data, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/mentalhealth/user/{}.json".format(user_data.userid)
-            with open(filename, 'w+') as fd:
-                json.dump(data, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(data)
-            filename = "./data/mentalhealth/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/mentalhealth/user/{}.json".format(user.userid)
-            with open(filename, 'rb') as fd:
-                return json.load(fd)
-        else:
-            filename = "./data/mentalhealth/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
-
     @gen.coroutine
-    def get(self, user, request):
-        print('A')
-        print(self)
-        print(self.get_argument('userid'))
-        try:
-            return self.load_user(user)
-        except Exception as ex:
-            return "Data for this user is not available."
+    def get_quotes(self, user, request):
+        return self.load_user_blob(user)
 
     @process_api_handler
     def register_handlers(self):
         return [
-            ('quotes', self.get),
+            ('quotes', self.get_quotes),
         ]

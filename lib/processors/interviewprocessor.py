@@ -176,7 +176,7 @@ class InterviewProcessor(BaseProcessor):
     @gen.coroutine
     def process(self, user_data):
         interview_data = {}
-        interview_data['name'] = user_data.name
+        interview_data['name'] = user_data.meta['name']
         # Try counts on post tokens
         # tweets is list of str
         # fb text is list of dicts, need 'text'
@@ -236,28 +236,6 @@ class InterviewProcessor(BaseProcessor):
 
         self.save_user_blob(interview_data, user_data)
         return True
-
-    def save_user(self, data, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/interview/user/{}.json".format(user_data.userid)
-            with open(filename, 'w+') as fd:
-                json.dump(data, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(data)
-            filename = "./data/interview/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/interview/user/{}.json".format(user.userid)
-            with open(filename, 'r') as fd:
-                return json.load(fd)
-        else:
-            filename = "./data/interview/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
 
     @gen.coroutine
     def interview_points(self, user, request):

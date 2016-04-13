@@ -16,8 +16,6 @@ class TruthProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        if not os.path.exists("./data/truth/user"):
-            os.makedirs("./data/truth/user")
 
         try:
             fd = open('./lib/processors/lib/stopwords.txt', 'r')
@@ -254,41 +252,19 @@ class TruthProcessor(BaseProcessor):
         truth_data['true'] = self.fill_truths(truth_data['true'])
         truth_data['false'] = self.fill_lies(truth_data['false'])
 
-        self.save_user(truth_data, user_data)
+        self.save_user_blob(truth_data, user_data)
         self.logger.info("Saved truth game data")
 
         # Need to make final determination on whether we want to use
         # real world facts. If we are, we can let everyone play 
         return True
 
-    def save_user(self, data, user_data):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/truth/user/{}.json".format(user_data.userid)
-            with open(filename, 'w+') as fd:
-                json.dump(data, fd)
-        else:
-            blob_enc = user_data.encrypt_blob(data)
-            filename = "./data/truth/user/{}.enc".format(user_data.userid)
-            with open(filename, 'wb+') as fd:
-                fd.write(blob_enc)
-
-    def load_user(self, user):
-        if CONFIG.get('_mode') == 'dev':
-            filename = "./data/truth/user/{}.json".format(user.userid)
-            with open(filename, 'r') as fd:
-                return json.load(fd)
-        else:
-            filename = "./data/truth/user/{}.enc".format(user.userid)
-            with open(filename, 'rb') as fd:
-                blob = fd.read()
-                return user.decrypt_blob(blob)
-
     @gen.coroutine
     def truth_grab(self, user, request):
         """
         Returns relevant data that the exhibits may want to know
         """
-        data = self.load_user(user)
+        data = self.load_user_blob(user)
         return data
 
     @process_api_handler
