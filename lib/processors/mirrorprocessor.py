@@ -49,7 +49,7 @@ class MirrorProcessor(BaseProcessor):
         email = user_data.meta['email']
 
         mirror_data = {}
-        mirror_data['name'] = user_data.name
+        mirror_data['name'] = user_data.meta['name']
         mirror_data['friends'] = []
         if user_data.data.get('gtext'):
             if user_data.data['gtext'].get('people'):
