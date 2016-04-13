@@ -10,9 +10,9 @@ from .ownupprocessor import OwnupProcessor
 from .interviewprocessor import InterviewProcessor
 from .ameliaprocessor import AmeliaProcessor
 from .mentalhealthprocessor import MentalHealthProcessor
+from .trackedprocessor import TrackedProcessor
 
 processors = [
-    DebugProcessor(),
     Pr0nProcessor(),
     TruthProcessor(),
     MirrorProcessor(),
@@ -20,7 +20,9 @@ processors = [
     OwnupProcessor(),
     InterviewProcessor(),
     AmeliaProcessor(),
-    MentalHealthProcessor()
+    MentalHealthProcessor(),
+    TrackedProcessor(),
+    DebugProcessor()
 ]
 
 

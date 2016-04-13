@@ -3,16 +3,14 @@ from .lib.utils import process_api_handler
 
 import re
 import random
-import os
+from .lib.baseprocessor import BaseProcessor
 
 
-class NewsProcessor(object):
+class NewsProcessor(BaseProcessor):
     name = 'news_processor'
 
     def __init__(self):
         super().__init__()
-        if not os.path.exists("./data/news/user"):
-            os.makedirs("./data/news/user")
 
     def fb_proxy(self, prof):
         if 'political' in prof:
