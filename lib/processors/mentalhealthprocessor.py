@@ -84,7 +84,7 @@ class MentalHealthProcessor(BaseProcessor):
         self.process_twitter(user_data, quotes)
         self.process_reddit(user_data, quotes)
         self.process_gtext(user_data, quotes)
-        print(quotes)
+#        print(quotes)
         if len(quotes) < 0:
             return False
         self.save_user_blob(quotes, user_data)

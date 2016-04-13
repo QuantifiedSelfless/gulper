@@ -33,6 +33,7 @@ class AmeliaProcessor(BaseProcessor):
                     if user_data.data['fbprofile'].get('education'):
                         self.names['ids'].append(person)
                         self.save_names(self.names, user_data)
+                        self.logger.info("Successfully processed amelia data for User %s" % user_data.userid)
                         return True
         return False
 

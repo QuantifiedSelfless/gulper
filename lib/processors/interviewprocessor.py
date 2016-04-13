@@ -9,7 +9,6 @@ import itertools
 import random
 import os
 
-
 class InterviewProcessor(BaseProcessor):
     name = 'interview_processor'
 
@@ -234,6 +233,7 @@ class InterviewProcessor(BaseProcessor):
                                 pos_counts, neg_counts, pos_interests,
                                 neg_interests, pos_events, neg_events)
 
+        self.logger.info("Successfully processed data for User %s" % user_data.userid)
         self.save_user_blob(interview_data, user_data)
         return True
 

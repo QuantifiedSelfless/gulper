@@ -107,7 +107,7 @@ class NewsProcessor(BaseProcessor):
     def process(self, user_data):
         """
         Process the scraped data inside of user_data and save it locally.  It
-        can save it to file, or a database... no one really cares
+        can save it to file, or a database... no one really cares..haha
         """
         data = {}
         data['category'] = None

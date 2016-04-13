@@ -11,7 +11,7 @@ from .interviewprocessor import InterviewProcessor
 from .ameliaprocessor import AmeliaProcessor
 from .mentalhealthprocessor import MentalHealthProcessor
 from .trackedprocessor import TrackedProcessor
-from .recommenderprocessor import RecommenderProcessor
+#from .recommenderprocessor import RecommenderProcessor
 
 processors = [
     Pr0nProcessor(),
@@ -45,4 +45,6 @@ def process(user_data):
                 p.name,
                 permission
             )
+
+    print("[User %s]: Done - Thank you for choosing Delta Airlines!" % user_data.userid)
     return result

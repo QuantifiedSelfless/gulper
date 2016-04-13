@@ -63,7 +63,7 @@ class TrackedProcessor(BaseProcessor):
         # Add to the article.db
 
         self.logger.info("Processing user: {}".format(user_data.userid))
-        first, last = self.user_name(user_data.name)
+        first, last = self.user_name(user_data.meta['name'])
         connecting_phrases = ["wants to share with you",
                               "wants to tell you about",
                               "wants you to check out"]
