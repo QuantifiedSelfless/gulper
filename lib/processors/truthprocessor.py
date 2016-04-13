@@ -179,7 +179,7 @@ class TruthProcessor(BaseProcessor):
         - times saying 'me'
         """
         truth_data = {}
-        truth_data['name'] = user_data.name
+        truth_data['name'] = user_data.meta['name']
         truth_data['true'] = []
         truth_data['false'] = []
 
@@ -187,7 +187,7 @@ class TruthProcessor(BaseProcessor):
             if user_data.data['gtext'].get('people', None) is not None:
                 gpeople = itertools.chain.from_iterable(
                     user_data.data['gtext']['people'])
-                cleaned = self.check_names(gpeople, user_data.name.split(' ')[-1])
+                cleaned = self.check_names(gpeople, user_data.meta['name'].split(' ')[-1])
                 true, lie = self.common_email_contact(cleaned)
                 if random.randint(0, 1) == 0:
                     truth_data['true'].append(
