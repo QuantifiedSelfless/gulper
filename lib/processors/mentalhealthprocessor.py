@@ -36,23 +36,21 @@ class MentalHealthProcessor(BaseProcessor):
         return True
 
     def process_facebook(self, user_data, quotes):
-        try:
+        if user_data.data.get('fbtext', None):
             fbtext = user_data.data.get('fbtext')
             if not fbtext or len(quotes) >= self.limit:
                 return
-            fbposts = fbtext['text']
+            fbposts = fbtext.get('text', None)
             for post in fbposts:
                 if not self.process_post(post['text'], quotes):
                     return
-        except Exception:
-            print('[MH] Exception occurred when processing facebook data.')
 
     def process_twitter(self, user_data, quotes):
         if user_data.data.get('twitter', None):
             twitter = user_data.data.get('twitter')
             if not twitter or len(quotes) >= self.limit:
                 return
-            tweets = twitter['tweets']
+            tweets = twitter.get('tweets', None)
             for post in tweets:
                 if not self.process_post(post, quotes):
                     return
@@ -63,14 +61,14 @@ class MentalHealthProcessor(BaseProcessor):
             if not reddit or len(quotes) >= self.limit:
                 return
             print(reddit.keys())
-            posts = reddit['text']
+            posts = reddit.get('text', None)
             for post in posts:
                 if not self.process_post(post['body'], quotes):
                     return
 
     def process_gtext(self, user_data, quotes):
         if user_data.data.get('gtext', None):
-            gtext = user_data.data.get('gtext')
+            gtext = user_data.data.get('gtext', None)
             if not gtext or len(quotes) >= self.limit:
                 return
             posts = gtext['snippets']
