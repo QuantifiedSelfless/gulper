@@ -1,7 +1,5 @@
 from tornado import gen
-import traceback
 
-from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
