@@ -3,7 +3,6 @@ from tornado import gen
 from .exhibit_permissions import ExhibitPermissions
 from ...basehandler import BaseHandler
 from ...user import User
-from ...database.db import get_user
 
 
 def make_handler(name, handler):
