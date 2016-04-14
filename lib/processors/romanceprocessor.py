@@ -30,4 +30,3 @@ class RomanceProcessor(BaseProcessor):
         return [
             ('romance', self.romantic),
         ]
-

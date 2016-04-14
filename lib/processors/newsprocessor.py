@@ -13,94 +13,37 @@ class NewsProcessor(BaseProcessor):
         super().__init__()
 
     def fb_proxy(self, prof):
+        parties = ['liberal', 'dem', 'moderate', 'cent', 'repub', 'conserv']
         if 'political' in prof:
-            dem = re.search('dem', prof['political'].lower())
-            liberal = re.search('liberal', prof['political'].lower())
-            repub = re.search('repub', prof['political'].lower())
-            cons = re.search('conservative', prof['political'].lower())
-            mod = re.search('moderate', prof['political'].lower())
-            cent = re.search('cent', prof['political'].lower())
-            if dem:
-                return 1
-            if liberal:
-                return 0
-            if repub:
-                return 3
-            if cons:
-                return 5
-            if mod:
-                return 4
-            if cent:
-                return 2
-        else:
-            return None
+            for i, party in enumerate(parties):
+                if party in prof['political'].lower():
+                    return i
+        return None
 
     def reddit_proxy(self, prof):
+        subs1 = ['hacking', 'crypto', 'politics', 'trees', 'apple', 'the_donald']
         if 'subs' in prof:
             for sub in prof['subs']:
-                if 'apple' in sub['name'].lower():
-                    return 4
-                if 'the_donald' in sub['name'].lower():
-                    return 5
-                if 'crypto' in sub['name'].lower():
-                    return 1
-                if 'hacking' in sub['name'].lower():
-                    return 0
-                if 'politics' in sub['name'].lower():
-                    return 2
-                if 'news' in sub['name'].lower():
-                    return 2
-                if 'trees' in sub['name'].lower():
-                    return 3
-        else:
-            return None
+                for i, subr in enumerate(subs1):
+                    if subr in sub['name'].lower():
+                        return i
+        return None
 
     def like_lookup(self, likes):
+        interests1 = ['snowden', 'data', 'hack', 'books', 'apple', 'nsa']
         for like in likes:
-            apple = re.search('apple', like.lower())
-            nsa = re.search('nsa', like.lower())
-            hack = re.search('hack', like.lower())
-            snowden = re.search('snowden', like.lower())
-            books = re.search('book', like.lower())
-            data = re.search('data', like.lower())
-            if apple:
-                return 4
-            if nsa:
-                return 5
-            if hack:
-                return 3
-            if books:
-                return 2
-            if snowden:
-                return 0
-            if data:
-                return 1
-        else:
-            return None
+            for i, inter in enumerate(interests1):
+                if inter in like.lower():
+                    return i
+        return None
 
     def follow_lookup(self, twit):
         if twit.get('following'):
+            interests1 = ['snowden', 'data', 'hack', 'books', 'apple', 'nsa']
             for follow in twit['following']:
-                apple = re.search('apple', follow['name'].lower())
-                nsa = re.search('nsa', follow['name'].lower())
-                hack = re.search('hack', follow['name'].lower())
-                snowden = re.search('snowden', follow['name'].lower())
-                books = re.search('book', follow['name'].lower())
-                data = re.search('data', follow['name'].lower())
-                if apple:
-                    return 4
-                if nsa:
-                    return 5
-                if hack:
-                    return 3
-                if books:
-                    return 2
-                if snowden:
-                    return 0
-                if data:
-                    return 1
-            else:
-                return None
+                for i, inter in enumerate(interests1):
+                    if inter in follow['name'].lower():
+                        return i
         return None
 
     @gen.coroutine
