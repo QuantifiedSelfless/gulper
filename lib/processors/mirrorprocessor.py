@@ -56,7 +56,7 @@ class MirrorProcessor(BaseProcessor):
                 gpeople = itertools.chain.from_iterable(
                     user_data.data['gtext']['people'])
                 cleaned = self.check_names(gpeople, last, email)
-                mirror_data['friends'].append(cleaned)
+                mirror_data['friends'].extend(cleaned)
             else:
                 mirror_data['friends'] = self.names
         else:
