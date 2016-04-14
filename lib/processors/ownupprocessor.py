@@ -83,7 +83,8 @@ class OwnupProcessor(BaseProcessor):
             perm.append(temp.pop())
         if len(perm) < 3:
             return False
-        self.save_user_blob(perm, user_data)
+        blob = {'name': user_data.meta['name'], 'quotes': perm}
+        self.save_user_blob(blob, user_data)
         return True
 
     @gen.coroutine
