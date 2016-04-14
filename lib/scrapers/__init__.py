@@ -1,8 +1,8 @@
 from tornado import gen
 
 from .youtube import YouTubeScraper
-from .gphotos import GPhotosScraper
-from .fbphotos import FBPhotosScraper
+#from .gphotos import GPhotosScraper
+#from .fbphotos import FBPhotosScraper
 from .gmailscrape import GMailScraper
 from .fbtext import FBTextScraper
 from .fblikes import FBLikesScraper
@@ -18,8 +18,8 @@ import traceback
 
 scrapers = [
     YouTubeScraper(),
-    GPhotosScraper(),
-    FBPhotosScraper(),
+#    GPhotosScraper(),
+#    FBPhotosScraper(),
     GMailScraper(),
     FBTextScraper(),
     FBLikesScraper(),
