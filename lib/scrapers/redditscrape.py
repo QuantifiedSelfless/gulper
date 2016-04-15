@@ -63,6 +63,7 @@ class RedditScraper(object):
         data['text'] = msgs
 
         me = r.get_me()
+        # May want to grab own profile name
         karma_c = me.comment_karma
         karma_l = me.link_karma
 

@@ -3,11 +3,30 @@ from tornado import gen
 from .lib.exhibit_permissions import ExhibitPermissions
 from .debugprocessor import DebugProcessor
 from .pr0nprocessor import Pr0nProcessor
-
+from .truthprocessor import TruthProcessor
+from .mirrorprocessor import MirrorProcessor
+from .newsprocessor import NewsProcessor
+from .ownupprocessor import OwnupProcessor
+from .interviewprocessor import InterviewProcessor
+from .ameliaprocessor import AmeliaProcessor
+from .mentalhealthprocessor import MentalHealthProcessor
+from .trackedprocessor import TrackedProcessor
+from .recommenderprocessor import RecommenderProcessor
+from .romanceprocessor import RomanceProcessor
 
 processors = [
-    DebugProcessor(),
     Pr0nProcessor(),
+    TruthProcessor(),
+    MirrorProcessor(),
+    NewsProcessor(),
+    OwnupProcessor(),
+    InterviewProcessor(),
+    AmeliaProcessor(),
+    MentalHealthProcessor(),
+    RecommenderProcessor(),
+    TrackedProcessor(),
+    RomanceProcessor(),
+    DebugProcessor()
 ]
 
 
@@ -29,4 +48,6 @@ def process(user_data):
                 p.name,
                 permission
             )
+
+    print("[User %s]: Done - Thank you for choosing Delta Airlines!" % user_data.userid)
     return result
