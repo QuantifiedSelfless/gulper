@@ -14,65 +14,13 @@ class InterviewProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        if not os.path.exists("./data/interview/user"):
-            os.makedirs("./data/interview/user")
-
-        try:
-            fd = open('./lib/processors/lib/negativeworkwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.negwork = raw.split('\n')
-            self.logger.info("Loaded negative work words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No Negative work words loaded")
-        try:
-            fd = open('./lib/processors/lib/positiveworkwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.poswork = raw.split('\n')
-            self.logger.info("Loaded positive work words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No positive work words loaded")
-        try:
-            fd = open('./lib/processors/lib/partywords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.partywords = raw.split('\n')
-            self.logger.info("Loaded party words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No party words loaded")
-        try:
-            fd = open('./lib/processors/lib/healthwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.healthwords = raw.split('\n')
-            self.logger.info("Loaded health words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No health words loaded")
-        try:
-            fd = open('./lib/processors/lib/skepticwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.skepwords = raw.split('\n')
-            self.logger.info("Loaded skeptical words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No skepetical words loaded")
-        try:
-            fd = open('./lib/processors/lib/posinterests.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.posinterests = raw.split('\n')
-            self.logger.info("Loaded positive interests for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No company names loaded")
-        try:
-            fd = open('./lib/processors/lib/goodevents.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.posevents = raw.split('\n')
-            self.logger.info("Loaded good events for analysis")
-        except (IOError, ValueError):
-            self.logger.info("No good events loaded")
+        self.negwork = self.load_keywords('negativeworkwords.txt')
+        self.poswork = self.load_keywords('positiveworkwords.txt')
+        self.partywords = self.load_keywords('partywords.txt')
+        self.healthwords = self.load_keywords('healthwords.txt')
+        self.skepwords = self.load_keywords('skepticwords.txt')
+        self.posinterests = self.load_keywords('posinterests.txt')
+        self.posevents = self.load_keywords('goodevents.txt')
 
     def scan_pos_tokens(self, alltext, counts, quotes):
         wordlists = [self.healthwords, self.poswork]

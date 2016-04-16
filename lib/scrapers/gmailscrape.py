@@ -38,7 +38,7 @@ def equalize_dict(data, max_num):
 
 
 class GMailScraper(object):
-    name = 'gtext'
+    name = 'gmail'
 
     def __init__(self):
         self.tokens = []

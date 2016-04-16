@@ -71,7 +71,7 @@ class MirrorProcessor(BaseProcessor):
             mirror_data['friends'] = randos
 
         mirror_data['work'] = []
-        if user_data.data['fbprofile'] is not False:
+        if user_data.data['fbprofile']:
             profile = user_data.data['fbprofile']
             if 'work' in profile:
                 for employ in profile['work']:

@@ -77,11 +77,12 @@ class TrackedProcessor(BaseProcessor):
         tracking_data = {}
         names = []
         if user_data.data.get('gtext'):
-            if user_data.data['gtext'].get('people'):
-                gpeople = itertools.chain.from_iterable(
-                        user_data.data['gtext']['people'])
-                cleaned = self.check_names(gpeople, last)
-                names.extend(cleaned)
+            for gtext in user_data.data['gtext']:
+                if gtext.get('people'):
+                    gpeople = itertools.chain.from_iterable(
+                            gtext['people'])
+                    cleaned = self.check_names(gpeople, last)
+                    names.extend(cleaned)
 
         red_friends = []
         if user_data.data.get('reddit'):

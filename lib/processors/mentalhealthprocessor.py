@@ -1,4 +1,5 @@
 from tornado import gen
+import itertools as IT
 
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
@@ -10,81 +11,52 @@ class MentalHealthProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        try:
-            fd = open('./lib/processors/lib/mentalwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.keywords = raw.split('\n')
-            self.logger.info("Loaded stop words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("Stop words not availble")
+        self.keywords = self.load_keywords('mentalwords.txt')
 
     def is_good_quote(self, text):
         text = text.lower()
         for word in self.keywords:
-            if text.find(word) > 0:
+            if word in text:
                 return True
         return False
 
-    """ Return True if processing should continue
-    """
-    def process_post(self, text, quotes):
-        if len(quotes) >= self.limit:
-            return False
-        if self.is_good_quote(text):
-            quotes.append(text)
-        return True
-
-    def process_facebook(self, user_data, quotes):
-        if user_data.data.get('fbtext', None):
-            fbtext = user_data.data.get('fbtext')
-            if not fbtext or len(quotes) >= self.limit:
-                return
-            fbposts = fbtext.get('text', None)
+    def process_facebook(self, user_data):
+        if user_data.data.get('fbtext'):
+            fbtext = user_data.data['fbtext']
+            fbposts = fbtext.get('text', [])
             for post in fbposts:
-                if not self.process_post(post['text'], quotes):
-                    return
+                yield post['text']
 
-    def process_twitter(self, user_data, quotes):
-        if user_data.data.get('twitter', None):
-            twitter = user_data.data.get('twitter')
-            if not twitter or len(quotes) >= self.limit:
-                return
-            tweets = twitter.get('tweets', None)
+    def process_twitter(self, user_data):
+        if user_data.data.get('twitter'):
+            twitter = user_data.data['twitter']
+            tweets = twitter.get('tweets', [])
             for post in tweets:
-                if not self.process_post(post, quotes):
-                    return
+                yield post
 
-    def process_reddit(self, user_data, quotes):
-        if user_data.data.get('reddit', None):
-            reddit = user_data.data.get('reddit')
-            if not reddit or len(quotes) >= self.limit:
-                return
-            print(reddit.keys())
-            posts = reddit.get('text', None)
+    def process_reddit(self, user_data):
+        if user_data.data.get('reddit'):
+            reddit = user_data.data['reddit']
+            posts = reddit.get('text', [])
             for post in posts:
-                if not self.process_post(post['body'], quotes):
-                    return
+                yield post['body']
 
-    def process_gtext(self, user_data, quotes):
-        if user_data.data.get('gtext', None):
-            gtext = user_data.data.get('gtext', None)
-            if not gtext or len(quotes) >= self.limit:
-                return
-            posts = gtext['snippets']
-            for post in posts:
-                if not self.process_post(post, quotes):
-                    return
+    def process_gtext(self, user_data):
+        if user_data.data.get('gtext'):
+            gtext = user_data.data['gtext']
+            for post in gtext.get('snippet', []):
+                yield post
 
     @gen.coroutine
     def process(self, user_data):
-        self.logger.info("[MH] Processing user: {}".format(user_data.userid))
-        quotes = []
-        self.process_facebook(user_data, quotes)
-        self.process_twitter(user_data, quotes)
-        self.process_reddit(user_data, quotes)
-        self.process_gtext(user_data, quotes)
-#        print(quotes)
+        self.logger.info("Processing user: {}".format(user_data.userid))
+        quote_candidates = IT.chain(self.process_facebook(user_data),
+                                    self.process_twitter(user_data),
+                                    self.process_reddit(user_data),
+                                    self.process_gtext(user_data))
+        quotes = list(IT.islice(quote_candidates, self.limit))
+        self.logger.debug("User {}: {} quotes".format(user_data.userid,
+                                                      len(quotes)))
         if len(quotes) < 0:
             return False
         self.save_user_blob(quotes, user_data)

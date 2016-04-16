@@ -37,3 +37,11 @@ class BaseProcessor(object):
             with open(filename, 'rb') as fd:
                 blob = fd.read()
                 return user.decrypt_blob(blob)
+
+    def load_keywords(self, datafile):
+        filename = './lib/processors/data/' + datafile
+        try:
+            with open(filename) as fd:
+                return [kw.strip() for kw in fd]
+        except IOError:
+            self.logger.exception("Could not load keywords: " + filename)

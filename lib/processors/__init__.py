@@ -1,4 +1,5 @@
 from tornado import gen
+import logging
 
 from .lib.exhibit_permissions import ExhibitPermissions
 from .debugprocessor import DebugProcessor
@@ -13,6 +14,9 @@ from .mentalhealthprocessor import MentalHealthProcessor
 from .trackedprocessor import TrackedProcessor
 from .recommenderprocessor import RecommenderProcessor
 from .romanceprocessor import RomanceProcessor
+
+FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
+logger = logging.getLogger("processor.process")
 
 processors = [
     Pr0nProcessor(),
@@ -48,6 +52,5 @@ def process(user_data):
                 p.name,
                 permission
             )
-
-    print("[User %s]: Done - Thank you for choosing Delta Airlines!" % user_data.userid)
+    logger.info("Done Processing: " + user_data.userid)
     return result
