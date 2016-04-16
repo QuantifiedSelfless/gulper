@@ -242,7 +242,7 @@ class Pr0nProcessor(BaseProcessor):
             score = name_score + 0.5 * similarity_score
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
-        return [{"name": n, "score": s, "fbid": names_to_fbid[name]}
+        return [{"name": n, "score": s, "fbid": names_to_fbid[n]}
                 for n, s in scores]
 
     @process_api_handler

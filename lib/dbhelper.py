@@ -70,7 +70,7 @@ class RethinkDB(object):
                 idxs = self.secondary_indicies[table]
                 for idx in idxs:
                     try:
-                        yield r.table(table).index_create(**idx)
+                        yield r.table(table).index_create(idx).run(conn)
                     except r.ReqlRuntimeError:
                         self.logger.debug("Table index exists: "
                                           "{}: {}".format(table, idx))

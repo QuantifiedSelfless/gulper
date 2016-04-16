@@ -23,7 +23,7 @@ class UnlockShowtime(BaseHandler):
         # and 'self documenting'
         params = {'showtime_id': showid, 'shares': shares,
                   'passphrase': passphrase}
-        url = url_concat(ticket_api + '/api/showtimes/access_tokens', params)
+        url = url_concat(ticket_api + '/api/showtimes/keys', params)
         show_data_raw = yield httpclient.fetch(url)
         if show_data_raw.code != 200:
             return self.error(show_data_raw.code, show_data_raw.body)
@@ -31,16 +31,16 @@ class UnlockShowtime(BaseHandler):
         show_data = json.loads(show_data_raw.body)
         show_date = show_data['data']['date']
 
-        rfidb = RFIDB.get_global()
+        rfidb = yield RFIDB.get_global()
         result = yield rfidb.unlock_show(showid, show_date,
                                          show_data['data']['users'])
         return self.api_response(result)
 
 
-class ListShowtimeUsers(BaseHandler):
+class ListUnlockedUsers(BaseHandler):
     @web.asynchronous
     @gen.coroutine
     def get(self):
-        rfidb = RFIDB.get_global()
+        rfidb = yield RFIDB.get_global()
         users = yield rfidb.list_users()
         return self.api_response(users)

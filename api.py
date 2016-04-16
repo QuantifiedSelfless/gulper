@@ -3,6 +3,7 @@ from tornado import web
 from tornado import options
 
 from app.user import UserProcess, UserStatus, ShowtimeProcess
+from app.rfid import UnlockShowtime, ListUnlockedUsers
 from lib import config
 from lib import processors
 
@@ -31,7 +32,9 @@ if __name__ == "__main__":
 
     app = web.Application(
         [
+            (r'/api/showtime/unlock', UnlockShowtime),
             (r'/api/showtime/process', ShowtimeProcess),
+            (r'/api/users/unlocked', ListUnlockedUsers),
             (r'/api/user/process', UserProcess),
             (r'/api/user/status', UserStatus),
         ] + processor_handlers,

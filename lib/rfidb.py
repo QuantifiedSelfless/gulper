@@ -1,8 +1,8 @@
 from tornado import gen
 import rethinkdb as r
 
-from dbhelper import RethinkDB
-from user import User
+from .dbhelper import RethinkDB
+from .user import User
 
 
 class RFIDB(RethinkDB):
@@ -17,6 +17,7 @@ class RFIDB(RethinkDB):
         conn = yield self.connection()
         objects = []
         for user in users:
+            print(user)
             objects.append({
                 'id': user['id'],
                 'publickey': user['publickey'],
