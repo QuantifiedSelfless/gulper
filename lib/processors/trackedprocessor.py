@@ -76,19 +76,19 @@ class TrackedProcessor(BaseProcessor):
 
         tracking_data = {}
         names = []
-        if user_data.data.get('gtext'):
-            for gtext in user_data.data['gtext']:
-                if gtext.get('people'):
-                    gpeople = itertools.chain.from_iterable(
-                            gtext['people'])
-                    cleaned = self.check_names(gpeople, last)
-                    names.extend(cleaned)
+        if user_data.data.get('gmail'):
+            gmail = user_data.data['gmail']
+            if gmail.get('people'):
+                people_flat = itertools.chain.from_iterable(gmail['people'])
+                cleaned = self.check_names(people_flat, last)
+                names.extend(cleaned)
 
         red_friends = []
         if user_data.data.get('reddit'):
-            if len(user_data.data['reddit']['text']) > 0:
+            if len(user_data.data['reddit']['text']):
                 rtext = user_data.data['reddit']['text']
-                red_friends = [text['author'] for text in rtext if text.get('author', None) is not None]
+                red_friends = [text['author'] 
+                               for text in rtext if text.get('author')]
 
         follows = []
         if user_data.data.get('twitter'):

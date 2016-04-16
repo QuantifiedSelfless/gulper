@@ -2,7 +2,10 @@ from tornado import gen
 import ujson as json
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
-from .lib.jaccard import jaccard_rec
+
+
+def question_similarity(A, B):
+    return len(A & B) / float(len(A | B))
 
 
 class RecommenderProcessor(BaseProcessor):
@@ -11,18 +14,19 @@ class RecommenderProcessor(BaseProcessor):
     def __init__(self):
         with open("lib/processors/data/recommender.json") as fd:
             sample_responses = json.load(fd)
-            self.sample_responses = [set(enumerate(r))
+            self.sample_responses = [set(r)
                                      for r in sample_responses]
         super().__init__()
 
-    def jaccard_recommend(self, user_answers):
-        user_answers = set(enumerate(user_answers))
+    def recommend(self, user_answers):
+        uas = set(user_answers)
         closest_sample = max(
             self.sample_responses,
-            key=lambda other: len(user_answers & other) /
-                              float(len(user_answers | other))
+            key=lambda x: question_similarity(x, uas)
         )
-        return closest_sample
+        result = list(closest_sample)
+        result.sort()
+        return result
 
     @gen.coroutine
     def process(self, user_data):
@@ -35,7 +39,7 @@ class RecommenderProcessor(BaseProcessor):
         Returns relevant data that the exhibits may want to know
         """
         ans = request.get_argument('answers')
-        data = jaccard_rec(ans)
+        data = self.jaccard_recommend(ans)
         return {"recommendations": data}
 
     @process_api_handler

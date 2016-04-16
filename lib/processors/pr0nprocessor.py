@@ -8,7 +8,6 @@ import itertools as IT
 from collections import Counter
 from operator import itemgetter
 
-from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
@@ -20,7 +19,7 @@ class Pr0nProcessor(BaseProcessor):
     def __init__(self):
         super().__init__()
         try:
-            fname = './data/pr0n/backend.pkl'
+            fname = './data/{}/backend.pkl'.format(self.name)
             with open(fname, 'rb') as fd:
                 self.pr0n_engine = pickle.load(fd)
             self.logger.info("Loaded backend from save state")
@@ -28,7 +27,7 @@ class Pr0nProcessor(BaseProcessor):
             self.logger.info("Recreating backend engine")
             self.pr0n_engine = self.create_engine()
             self.read_pr0n()
-            os.makedirs('./data/pr0n/', exist_ok=True)
+            os.makedirs('./data/{}/'.format(self.name), exist_ok=True)
             with open(fname, 'wb+') as fd:
                 pickle.dump(self.pr0n_engine, fd)
 

@@ -17,18 +17,18 @@ import traceback
 
 
 scrapers = [
-    YouTubeScraper(),
-    GPhotosScraper(),
     FBPhotosScraper(),
     GMailScraper(),
     FBTextScraper(),
     FBLikesScraper(),
     FBEventsScraper(),
     FBProfileScraper(),
-    TumblrScraper(),
     RedditScraper(),
-    SpotifyScraper(),
     TwitterScraper()
+    # GPhotosScraper(), # not being used
+    # YouTubeScraper(), # not being used
+    # TumblrScraper(), # not being used
+    # SpotifyScraper(), # not being used
 ]
 
 

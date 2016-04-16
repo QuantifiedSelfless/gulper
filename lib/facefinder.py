@@ -3,15 +3,15 @@ Good example:
     http://dlib.net/face_detector.py.html
 """
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPError
+from tornado.httpclient import HTTPError
 from io import BytesIO
 from PIL import Image
 import numpy as np
 import dlib
 from . import openface
+from . import httpclient
 
 detector = dlib.get_frontal_face_detector()
-http_client = AsyncHTTPClient()
 
 
 def find_faces_buffer(image_fd, hash_face=False, upsample=1):
@@ -38,7 +38,7 @@ def find_faces_url(url, hash_face=False, upsample=1):
                 (0 is best)
     """
     try:
-        image_req = yield http_client.fetch(url)
+        image_req = yield httpclient.fetch(url, request_timeout=30.0)
     except HTTPError as e:
         print("Exception while fetching image URL: {}: {}".format(url, e))
         return []

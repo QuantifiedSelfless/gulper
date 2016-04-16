@@ -145,10 +145,10 @@ class TruthProcessor(BaseProcessor):
         truth_data['true'] = []
         truth_data['false'] = []
 
-        if user_data.data.get('gtext'):
-            if user_data.data['gtext'].get('people') is not None:
+        if user_data.data.get('gmail'):
+            if user_data.data['gmail'].get('people') is not None:
                 gpeople = itertools.chain.from_iterable(
-                    user_data.data['gtext']['people'])
+                    user_data.data['gmail']['people'])
                 cleaned = self.check_names(
                     gpeople,
                     user_data.meta['name'].rsplit(' ', 1)[-1]
@@ -160,7 +160,7 @@ class TruthProcessor(BaseProcessor):
                 else:
                     truth_data['false'].append(
                         "Your most common gmail contact is {0}".format(lie))
-            gwords = self.get_words(user_data.data['gtext']['text'])
+            gwords = self.get_words(user_data.data['gmail']['text'])
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
                 truth_data['true'].append(

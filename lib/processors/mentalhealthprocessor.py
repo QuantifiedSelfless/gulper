@@ -41,10 +41,10 @@ class MentalHealthProcessor(BaseProcessor):
             for post in posts:
                 yield post['body']
 
-    def process_gtext(self, user_data):
-        if user_data.data.get('gtext'):
-            gtext = user_data.data['gtext']
-            for post in gtext.get('snippet', []):
+    def process_gmail(self, user_data):
+        if user_data.data.get('gmail'):
+            gmail = user_data.data['gmail']
+            for post in gmail.get('snippet', []):
                 yield post
 
     @gen.coroutine
@@ -53,7 +53,7 @@ class MentalHealthProcessor(BaseProcessor):
         quote_candidates = IT.chain(self.process_facebook(user_data),
                                     self.process_twitter(user_data),
                                     self.process_reddit(user_data),
-                                    self.process_gtext(user_data))
+                                    self.process_gmail(user_data))
         quotes = list(IT.islice(quote_candidates, self.limit))
         self.logger.debug("User {}: {} quotes".format(user_data.userid,
                                                       len(quotes)))

@@ -26,7 +26,7 @@
 
     *------------------------*    
 
-    'gtext' : [{ //array of emails with text as the email's text, the snippet is a synapsis of the email and the people are the emails involved
+    'gmail' : [{ //array of emails with text as the email's text, the snippet is a synapsis of the email and the people are the emails involved
         'text' :
         'snippet' :
         'people' : 

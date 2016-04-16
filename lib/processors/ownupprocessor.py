@@ -58,7 +58,6 @@ class OwnupProcessor(BaseProcessor):
             reddit = user_data.data.get('reddit', None)
             if not reddit or len(perm) >= self.limit:
                 return
-            print(reddit.keys())
             posts = reddit['text']
             for post in posts:
                 if not self.process_post(post['body'], temp, perm):
