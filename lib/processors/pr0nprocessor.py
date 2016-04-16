@@ -105,6 +105,7 @@ class Pr0nProcessor(BaseProcessor):
             return False
         names_to_scores = {}
         images_to_scores = {}
+        names_to_fbid = {}
         user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
@@ -148,11 +149,13 @@ class Pr0nProcessor(BaseProcessor):
                                 'normalization': {'similar': 0, 'name': 0},
                                 'images': {},
                             }
+                        names_to_fbid[name] = tag['id']
                         names_to_scores[name]['images'][img] = distance
                         images_to_scores[img]['names'][name] = distance
         blob = {
             'names_to_scores': names_to_scores,
             'images_to_scores': images_to_scores,
+            'names_to_fbid': names_to_fbid,
             'engine': user_engine,
         }
         self.save_user_blob(blob, user_data)
@@ -229,6 +232,7 @@ class Pr0nProcessor(BaseProcessor):
         metric... but it seems to be good enough.
         """
         data = self.load_user_blob(user)
+        names_to_fbid = data['names_to_fbid']
         scores = []
         for name, data in data['names_to_scores'].items():
             name_score = data['scores']['name'] / \
@@ -238,7 +242,8 @@ class Pr0nProcessor(BaseProcessor):
             score = name_score + 0.5 * similarity_score
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
-        return [{"name": n, "score": s} for n, s in scores]
+        return [{"name": n, "score": s, "fbid": names_to_fbid[name]}
+                for n, s in scores]
 
     @process_api_handler
     def register_handlers(self):

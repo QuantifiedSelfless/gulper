@@ -1,13 +1,9 @@
 from tornado import gen
 from .lib.utils import process_api_handler
-from ..config import CONFIG
 from .lib.baseprocessor import BaseProcessor
 
-import ujson as json
-import re
-import itertools
 import random
-import os
+
 
 class InterviewProcessor(BaseProcessor):
     name = 'interview_processor'

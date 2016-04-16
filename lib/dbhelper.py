@@ -11,8 +11,9 @@ object_cache = {}
 
 
 class RethinkDB(object):
-    def __init__(self, dbname, tables):
+    def __init__(self, dbname, tables, secondary_indicies=None):
         self._connection = None
+        self.secondary_indicies = secondary_indicies or {}
         self.dbname = dbname
         self.tables = tables
         logging.basicConfig(format=FORMAT)
@@ -65,6 +66,14 @@ class RethinkDB(object):
                 yield r.table_create(table).run(conn)
             except r.ReqlOpFailedError:
                 self.logger.debug("Table already exists: " + table)
+            if table in self.secondary_indicies:
+                idxs = self.secondary_indicies[table]
+                for idx in idxs:
+                    try:
+                        yield r.table(table).index_create(**idx)
+                    except r.ReqlRuntimeError:
+                        self.logger.debug("Table index exists: "
+                                          "{}: {}".format(table, idx))
 
         yield r.db(self.dbname).wait().run(conn)
         self.logger.info("Done initializing DB")

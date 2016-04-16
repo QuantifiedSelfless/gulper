@@ -1,3 +1,4 @@
+from tornado import gen
 import logging
 import pickle
 import os
@@ -9,9 +10,15 @@ FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
 
 
 class BaseProcessor(object):
+    auth = True
+
     def __init__(self, *args, **kwargs):
         logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("processor." + self.name)
+
+    @gen.coroutine
+    def process(self, user_data):
+        return True
 
     def save_user_blob(self, blob, user):
         filedata = dict(name=self.name, uid=user.userid)

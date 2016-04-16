@@ -10,6 +10,7 @@ def question_similarity(A, B):
 
 class RecommenderProcessor(BaseProcessor):
     name = 'recommend_processor'
+    auth = False
 
     def __init__(self):
         with open("lib/processors/data/recommender.json") as fd:
