@@ -14,19 +14,18 @@ class RecommenderProcessor(BaseProcessor):
     def __init__(self):
         with open("lib/processors/data/recommender.json") as fd:
             sample_responses = json.load(fd)
-            self.sample_responses = [set(r)
+            self.sample_responses = [r
                                      for r in sample_responses]
+            self.sample_responses_db = list(map(set, self.sample_responses))
         super().__init__()
 
     def recommend(self, user_answers):
         uas = set(user_answers)
-        closest_sample = max(
-            self.sample_responses,
-            key=lambda x: question_similarity(x, uas)
+        idx, _ = max(
+            enumerate(self.sample_responses_db),
+            key=lambda x: question_similarity(x[1], uas)
         )
-        result = list(closest_sample)
-        result.sort()
-        return result
+        return self.sample_responses[idx]
 
     @gen.coroutine
     def process(self, user_data):
@@ -38,8 +37,8 @@ class RecommenderProcessor(BaseProcessor):
         """
         Returns relevant data that the exhibits may want to know
         """
-        ans = request.get_argument('answers')
-        data = self.jaccard_recommend(ans)
+        ans = request.get_arguments('answers')
+        data = self.recommend(ans)
         return {"recommendations": data}
 
     @process_api_handler

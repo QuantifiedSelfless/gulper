@@ -32,7 +32,7 @@ class Pr0nProcessor(BaseProcessor):
                 pickle.dump(self.pr0n_engine, fd)
 
     def _get_img(self, img_hash):
-        fname = "data/pr0n/backend/{0[0]}/{0[1]}/{0}.pkl".format(img_hash)
+        fname = "data/pr0n_processor/backend/{0[0]}/{0[1]}/{0}.pkl".format(img_hash)
         with open(fname, 'rb') as fd:
             return pickle.load(fd)
 
@@ -42,7 +42,7 @@ class Pr0nProcessor(BaseProcessor):
 
     def read_pr0n(self):
         num_added = 0
-        for dirname, _, filenames in os.walk('./data/pr0n/backend/'):
+        for dirname, _, filenames in os.walk('./data/pr0n_processor/backend/'):
             if filenames:
                 for filename in filenames:
                     if not filename.endswith('pkl'):
