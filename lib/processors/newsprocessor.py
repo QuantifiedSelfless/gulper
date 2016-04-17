@@ -75,7 +75,7 @@ class NewsProcessor(BaseProcessor):
         """
         Returns relevant data that the exhibits may want to know
         """
-        data = self.load_user_blob(users)
+        data = self.load_user_blob(user)
         return data
 
     @process_api_handler
