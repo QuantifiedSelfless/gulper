@@ -21,7 +21,7 @@ class DebugProcessor(BaseProcessor):
         os.makedirs('./data/debug', exist_ok=True)
         with open(filename, 'wb+') as fd:
             pickle.dump(user_data.data, fd)
-        self.logger.info("Saved user {} to {}".format(user_data.userid, 
+        self.logger.info("Saved user {} to {}".format(user_data.userid,
                                                       filename))
         return True
 
