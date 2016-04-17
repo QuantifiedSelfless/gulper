@@ -11,3 +11,4 @@ git+https://github.com/pixelogik/NearPy.git
 ujson
 spotipy
 rethinkdb
+gender-guesser
