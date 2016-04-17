@@ -23,5 +23,6 @@ $ python3 config_packer.py decrypt config.conf.enc > config.conf
 and finally, run!
 
 ```
+$ source ~/.bashrc # since your shell probably sucks
 $ python3 api.py
 ```
