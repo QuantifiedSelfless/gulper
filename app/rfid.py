@@ -44,3 +44,15 @@ class ListUnlockedUsers(BaseHandler):
         rfidb = yield RFIDB.get_global()
         users = yield rfidb.list_users()
         return self.api_response(users)
+
+
+class AssociateRFID(BaseHandler):
+    @web.asynchronous
+    @gen.coroutine
+    def get(self):
+        userid = self.get_argument("userid")
+        rfid = self.get_argument("rfid")
+
+        rfidb = yield RFIDB.get_global()
+        associate = yield rfidb.associate_user(userid, rfid)
+        return self.api_response(associate)

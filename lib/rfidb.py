@@ -17,7 +17,6 @@ class RFIDB(RethinkDB):
         conn = yield self.connection()
         objects = []
         for user in users:
-            print(user)
             objects.append({
                 'id': user['id'],
                 'publickey': user['publickey'],
@@ -28,14 +27,17 @@ class RFIDB(RethinkDB):
                 'showdate': date,
                 'rfid': None,
             })
-        yield r.table('rfid').insert(*objects, conflict='update').run(conn)
+        result = yield r.table('rfid').insert(objects, conflict='update') \
+                        .run(conn)
+        return result
 
     @gen.coroutine
     def list_users(self):
         conn = yield self.connection()
         try:
-            result = yield r.table('rfid').without('privatekey', 'publickey') \
+            cursor = yield r.table('rfid').without('privatekey', 'publickey') \
                             .run(conn)
+            result = yield self.read_cursor(cursor)
             return result
         except:
             return []
@@ -46,7 +48,10 @@ class RFIDB(RethinkDB):
         try:
             result = yield r.table('rfid').get(userid).update({'rfid': rfid}) \
                             .run(conn)
-            return result
+            if result['skipped'] == 1:
+                return {'success': False, 'reason': 'Unknown user'}
+            elif result['replaced'] == 1 or result['unchanged'] == 1:
+                return {'success': True, 'reason': None}
         except:
             self.logger.exception("Unable to associate user: "
                                   "{} <-> {}".format(userid, rfid))
@@ -57,8 +62,8 @@ class RFIDB(RethinkDB):
         conn = yield self.connection()
         try:
             userdata = yield r.table('rfid').get_all(rfid, index='rfid') \
-                            .sort(r.desc('showdate')).limit(1).run(conn)
-            return self.userdata_to_obj(userdata)
+                            .order_by(r.desc('showdate')).limit(1).run(conn)
+            return self.userdata_to_obj(userdata[0])
         except:
             self.logger.exception("Unable to get user for "
                                   "rfid: {}".format(rfid))
@@ -66,6 +71,7 @@ class RFIDB(RethinkDB):
 
     @staticmethod
     def userdata_to_obj(userdata):
+        print(userdata)
         userid = userdata.pop('id')
         privatekey_pem = userdata.pop('privatekey')
         publickey_pem = userdata.pop('publickey')

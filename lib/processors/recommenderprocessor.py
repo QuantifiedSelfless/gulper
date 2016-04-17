@@ -29,11 +29,6 @@ class RecommenderProcessor(BaseProcessor):
         return self.sample_responses[idx]
 
     @gen.coroutine
-    def process(self, user_data):
-        # This game requires no data
-        return True
-
-    @gen.coroutine
     def recommend_stuff(self, user, request):
         """
         Returns relevant data that the exhibits may want to know

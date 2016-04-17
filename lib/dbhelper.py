@@ -13,15 +13,31 @@ object_cache = {}
 class RethinkDB(object):
     def __init__(self, dbname, tables, secondary_indicies=None):
         self._connection = None
-        self.secondary_indicies = secondary_indicies or {}
         self.dbname = dbname
         self.tables = tables
+        self.secondary_indicies = secondary_indicies or {}
         logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("rethinkdb." + dbname)
+
+    @staticmethod
+    @gen.coroutine
+    def read_cursor(cursor):
+        data = []
+        while (yield cursor.fetch_next()):
+            item = yield cursor.next()
+            data.append(item)
+        return data
 
     @classmethod
     @gen.coroutine
     def get_global(cls):
+        """
+        Fancy function to get a global reference to an instance of the current
+        class.  It is extra fancy because it,
+            1) auto-caches the global instance
+            2) has a special state for when the instance is still initializing
+               to avoid race conditions (db == True case)
+        """
         global object_cache
         db = object_cache.get(cls)
         if db is None:

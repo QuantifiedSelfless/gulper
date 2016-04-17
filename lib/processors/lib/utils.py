@@ -1,6 +1,7 @@
 from tornado import gen
 
 from .exhibit_permissions import ExhibitPermissions
+from ...rfidb import RFIDB
 from ...basehandler import BaseHandler
 from ...user import User
 
@@ -36,20 +37,26 @@ def make_handler(name, handler, checkauth):
     class ProcAPIHandler(BaseHandler):
         @gen.coroutine
         def process_request(self):
-            if checkauth:
-                userid = self.get_argument('userid')
-                exibperm = yield ExhibitPermissions.get_global()
-                permission = yield exibperm.has_permission(userid, name)
-                if permission is not True:
-                    return self.error(403, "NO_ACCESS: {}".format(userid))
-            else:
-                userid = self.get_argument('userid', None)
+            userid = self.get_argument('userid', None)
+            rfid = self.get_argument('rfid', None)
+            if checkauth and not (userid is None) ^ (rfid is None):
+                return self.error(400, 'userid or rfid required')
+
             privatekey_pem = self.get_argument('privatekey', None)
             publickey_pem = self.get_argument('publickey', None)
             user = None
             if userid:
                 user = User(userid, publickey_pem=publickey_pem,
                             privatekey_pem=privatekey_pem)
+            elif rfid:
+                rfidb = yield RFIDB.get_global()
+                user = yield rfidb.rfid_to_user(rfid)
+                userid = user.userid
+            if checkauth:
+                exibperm = yield ExhibitPermissions.get_global()
+                permission = yield exibperm.has_permission(userid, name)
+                if permission is not True:
+                    return self.error(403, "NO_ACCESS: {}".format(userid))
             data = yield handler(user, self)
             return self.api_response(data)
 
