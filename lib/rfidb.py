@@ -69,9 +69,21 @@ class RFIDB(RethinkDB):
                                   "rfid: {}".format(rfid))
             return None
 
+    @gen.coroutine
+    def rfid_to_userid(self, rfid):
+        conn = yield self.connection()
+        try:
+            userdata = yield r.table('rfid').get_all(rfid, index='rfid') \
+                            .order_by(r.desc('showdate')).get_field('id') \
+                            .limit(1).run(conn)
+            return userdata[0]
+        except:
+            self.logger.exception("Unable to get user for "
+                                  "rfid: {}".format(rfid))
+            return None
+
     @staticmethod
     def userdata_to_obj(userdata):
-        print(userdata)
         userid = userdata.pop('id')
         privatekey_pem = userdata.pop('privatekey')
         publickey_pem = userdata.pop('publickey')

@@ -76,12 +76,21 @@ def make_permcheck(name, checkauth):
         @gen.coroutine
         def get(self):
             userids = self.get_arguments('userid')
+            rfids = self.get_arguments('rfid')
             if not checkauth:
-                return [{'userid': uid, 'permission': True} for uid in userids]
+                return [{'userid': uid, 'rfid': None, 'permission': True}
+                        for uid in userids] + \
+                       [{'userid': None, 'rfid': rf, 'permission': True}
+                        for rf in rfids]
             exibperm = yield ExhibitPermissions.get_global()
+            rfidb = yield RFIDB.get_global()
             result = []
             for userid in userids:
                 permission = yield exibperm.has_permission(userid, name)
-                result.apend({"userid": userid, "permission": permission})
-            return result
+                result.append({"userid": userid, "rfid": None, "permission": permission})
+            for rfid in rfids:
+                userid = yield rfidb.rfid_to_userid(rfid)
+                permission = yield exibperm.has_permission(userid, name)
+                result.append({"userid": userid, "rfid": rfid, "permission": permission})
+            return self.api_response(result)
     return CheckPermissionHandler
