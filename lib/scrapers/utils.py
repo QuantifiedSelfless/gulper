@@ -1,10 +1,13 @@
 from tornado import gen
-from tornado.httpclient import AsyncHTTPClient, HTTPError
+from tornado.httpclient import HTTPError
+from .. import httpclient
 import ujson as json
 import re
+import logging
 
 
-http_client = AsyncHTTPClient()
+FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
+logger = logging.getLogger("processor.utils")
 
 ssn = re.compile("(\d{3}-?\d{2}-?\d{4}|XXX-XX-XXXX)$")
 ccn = re.compile("(?:\d[ -]*?){13,16}")
@@ -47,9 +50,11 @@ def facebook_paginate(data, max_results=500):
         except KeyError:
             break
         try:
-            request = yield http_client.fetch(paginate_url)
-        except HTTPError as e:
-            print("Exception while paginating facebook request: ", e)
+            request = yield httpclient.fetch(paginate_url,
+                                             validate_cert=False,
+                                             request_timeout=10.0)
+        except HTTPError:
+            logger.exception("Exception while paginating facebook")
             break
         data = json.loads(request.body)
     return paginated_data

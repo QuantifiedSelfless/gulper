@@ -1,13 +1,11 @@
 from tornado import gen
-from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
-import ujson as json
 import itertools
 import re
 import random
-import os
+from collections import Counter
 
 
 class TruthProcessor(BaseProcessor):
@@ -16,29 +14,9 @@ class TruthProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-
-        try:
-            fd = open('./lib/processors/lib/stopwords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.stopwords = raw.split('\n')
-            self.logger.info("Loaded stop words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("Stop words not availble")
-        try:
-            fd = open('./lib/processors/lib/fakefacts.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.fakefacts = raw.split('\n')
-        except (IOError, ValueError):
-            self.logger.info("Couldn't find fake facts")
-        try:
-            fd = open('./lib/processors/lib/realfacts.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.realfacts = raw.split('\n')
-        except (IOError, ValueError):
-            self.logger.info("Couldn't find real facts")
+        self.stopwords = self.load_keywords("stopwords.txt")
+        self.fakefacts = self.load_keywords("fakefacts.txt")
+        self.realfacts = self.load_keywords("realfacts.txt")
         self.truths = random.randint(7, 8)
 
     def get_words(self, text_list):
@@ -79,18 +57,7 @@ class TruthProcessor(BaseProcessor):
         allsubs = []
         for sub in subs:
             allsubs.append(sub['subreddit'])
-        highest = 0
-        the_one = None
-        for sub in allsubs:
-            total = allsubs.count(sub)
-            if total > highest:
-                highest = total
-                the_one = sub
-        unique = set(allsubs)
-        allsubs = list(unique)
-        allsubs.remove(the_one)
-        lie = random.choice(allsubs)
-        return the_one, lie
+        return self._common_and_lie(allsubs)
 
     def check_names(self, names, lastname):
         """
@@ -107,20 +74,14 @@ class TruthProcessor(BaseProcessor):
         return good_names
 
     def common_email_contact(self, people):
-        highest = 0
-        person = None
-        for name in people:
-            total = people.count(name)
-            if total > highest:
-                highest = total
-                person = name
-        unique = set(people)
-        people = list(unique)
-        people.remove(person)
-        lie = ''
-        while len(lie) < 4:
-            lie = random.choice(people)
-        return person, lie
+        return self._common_and_lie(people)
+
+    def _common_and_lie(self, items):
+        items_count = Counter(items)
+        top_10 = items_count.most_common(10)
+        best_item, _ = top_10[0]
+        lie, _ = random.choice(top_10[1:])
+        return best_item, lie
 
     def fill_truths(self, truestuff):
         while len(truestuff) < self.truths:
@@ -155,7 +116,8 @@ class TruthProcessor(BaseProcessor):
         else:
             if quant >= thresh and len(lies) <= 15 - self.truths:
                 lies.append(
-                    fact_str.format(quant * random.randint(round(thresh/3), thresh*3)))
+                    fact_str.format(quant * random.randint(round(thresh/3),
+                                                           thresh*3)))
         return facts, lies
 
     @gen.coroutine
@@ -183,11 +145,14 @@ class TruthProcessor(BaseProcessor):
         truth_data['true'] = []
         truth_data['false'] = []
 
-        if user_data.data['gtext'] is not False and user_data.data['gtext'] is not None:
-            if user_data.data['gtext'].get('people', None) is not None:
+        if user_data.data.get('gmail'):
+            if user_data.data['gmail'].get('people') is not None:
                 gpeople = itertools.chain.from_iterable(
-                    user_data.data['gtext']['people'])
-                cleaned = self.check_names(gpeople, user_data.meta['name'].split(' ')[-1])
+                    user_data.data['gmail']['people'])
+                cleaned = self.check_names(
+                    gpeople,
+                    user_data.meta['name'].rsplit(' ', 1)[-1]
+                )
                 true, lie = self.common_email_contact(cleaned)
                 if random.randint(0, 1) == 0:
                     truth_data['true'].append(
@@ -195,19 +160,22 @@ class TruthProcessor(BaseProcessor):
                 else:
                     truth_data['false'].append(
                         "Your most common gmail contact is {0}".format(lie))
-            gwords = self.get_words(user_data.data['gtext']['text'])
+            gwords = self.get_words(user_data.data['gmail']['text'])
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
                 truth_data['true'].append(
-                    "Besides articles, prepositions, and pronouns your most common word in email is {0}".format(gfreq[0][1]))
+                    "Besides articles, prepositions, and pronouns your most "
+                    "common word in email is {0}".format(gfreq[0][1]))
             else:
                 word_len = len(gfreq)
                 grab = round(word_len * .5)
                 truth_data['false'].append(
-                    "Besides articles, prepositions, and pronouns your most common word in email is \"{0}\"".format(gfreq[grab][1]))
+                    "Besides articles, prepositions, and pronouns your most "
+                    "common word in email is \"{0}\"".format(gfreq[grab][1]))
 
-        if user_data.data['fbtext'] is not False:
-            text_list = [post['text'] for post in user_data.data['fbtext']['text']]
+        if user_data.data.get('fbtext'):
+            text_list = [post['text']
+                         for post in user_data.data['fbtext']['text']]
             fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
             # Later this can be a loop that tried different word, token pairs
@@ -237,7 +205,7 @@ class TruthProcessor(BaseProcessor):
                     "You used the word \"love\" {0} times on facebook",
                     truth_data['true'], truth_data['false'], 0)
 
-        if user_data.data['reddit'] is not False:
+        if user_data.data.get('reddit'):
             fact, lie = self.common_subreddit(
                 user_data.data['reddit']['submissions'])
             if (len(truth_data['true']) < len(truth_data['false'])):
@@ -256,7 +224,7 @@ class TruthProcessor(BaseProcessor):
         self.logger.info("Saved truth game data")
 
         # Need to make final determination on whether we want to use
-        # real world facts. If we are, we can let everyone play 
+        # real world facts. If we are, we can let everyone play
         return True
 
     @gen.coroutine

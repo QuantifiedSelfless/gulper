@@ -10,14 +10,7 @@ class OwnupProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        try:
-            fd = open('./lib/processors/lib/keywords.txt', 'r')
-            raw = fd.read()
-            fd.close()
-            self.keywords = raw.split('\n')
-            self.logger.info("Loaded key words for analysis")
-        except (IOError, ValueError):
-            self.logger.info("Stop words not availble")
+        self.keywords = self.load_keywords('ownup.txt')
 
     def is_great_quote(self, text):
         text = text.lower()
@@ -65,7 +58,6 @@ class OwnupProcessor(BaseProcessor):
             reddit = user_data.data.get('reddit', None)
             if not reddit or len(perm) >= self.limit:
                 return
-            print(reddit.keys())
             posts = reddit['text']
             for post in posts:
                 if not self.process_post(post['body'], temp, perm):

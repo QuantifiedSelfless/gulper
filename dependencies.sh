@@ -66,6 +66,8 @@ if [ ! -d ~/torch ]; then
     pushd ~/torch; 
     bash install-deps;
     ./install.sh -b
+    source ~/.bashrc
+    luarocks install dpnn
     popd
 fi
 

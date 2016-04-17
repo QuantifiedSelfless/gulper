@@ -11,16 +11,33 @@ object_cache = {}
 
 
 class RethinkDB(object):
-    def __init__(self, dbname, tables):
+    def __init__(self, dbname, tables, secondary_indicies=None):
         self._connection = None
         self.dbname = dbname
         self.tables = tables
+        self.secondary_indicies = secondary_indicies or {}
         logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("rethinkdb." + dbname)
+
+    @staticmethod
+    @gen.coroutine
+    def read_cursor(cursor):
+        data = []
+        while (yield cursor.fetch_next()):
+            item = yield cursor.next()
+            data.append(item)
+        return data
 
     @classmethod
     @gen.coroutine
     def get_global(cls):
+        """
+        Fancy function to get a global reference to an instance of the current
+        class.  It is extra fancy because it,
+            1) auto-caches the global instance
+            2) has a special state for when the instance is still initializing
+               to avoid race conditions (db == True case)
+        """
         global object_cache
         db = object_cache.get(cls)
         if db is None:
@@ -65,6 +82,14 @@ class RethinkDB(object):
                 yield r.table_create(table).run(conn)
             except r.ReqlOpFailedError:
                 self.logger.debug("Table already exists: " + table)
+            if table in self.secondary_indicies:
+                idxs = self.secondary_indicies[table]
+                for idx in idxs:
+                    try:
+                        yield r.table(table).index_create(idx).run(conn)
+                    except r.ReqlRuntimeError:
+                        self.logger.debug("Table index exists: "
+                                          "{}: {}".format(table, idx))
 
         yield r.db(self.dbname).wait().run(conn)
         self.logger.info("Done initializing DB")

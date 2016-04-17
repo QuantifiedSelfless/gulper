@@ -8,7 +8,6 @@ import itertools as IT
 from collections import Counter
 from operator import itemgetter
 
-from ..config import CONFIG
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
@@ -20,7 +19,7 @@ class Pr0nProcessor(BaseProcessor):
     def __init__(self):
         super().__init__()
         try:
-            fname = './data/pr0n/backend.pkl'
+            fname = './data/{}/backend.pkl'.format(self.name)
             with open(fname, 'rb') as fd:
                 self.pr0n_engine = pickle.load(fd)
             self.logger.info("Loaded backend from save state")
@@ -28,12 +27,12 @@ class Pr0nProcessor(BaseProcessor):
             self.logger.info("Recreating backend engine")
             self.pr0n_engine = self.create_engine()
             self.read_pr0n()
-            os.makedirs('./data/pr0n/', exist_ok=True)
+            os.makedirs('./data/{}/'.format(self.name), exist_ok=True)
             with open(fname, 'wb+') as fd:
                 pickle.dump(self.pr0n_engine, fd)
 
     def _get_img(self, img_hash):
-        fname = "data/pr0n/backend/{0[0]}/{0[1]}/{0}.pkl".format(img_hash)
+        fname = "data/pr0n_processor/backend/{0[0]}/{0[1]}/{0}.pkl".format(img_hash)
         with open(fname, 'rb') as fd:
             return pickle.load(fd)
 
@@ -43,7 +42,7 @@ class Pr0nProcessor(BaseProcessor):
 
     def read_pr0n(self):
         num_added = 0
-        for dirname, _, filenames in os.walk('./data/pr0n/backend/'):
+        for dirname, _, filenames in os.walk('./data/pr0n_processor/backend/'):
             if filenames:
                 for filename in filenames:
                     if not filename.endswith('pkl'):
@@ -106,6 +105,7 @@ class Pr0nProcessor(BaseProcessor):
             return False
         names_to_scores = {}
         images_to_scores = {}
+        names_to_fbid = {}
         user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
@@ -149,11 +149,13 @@ class Pr0nProcessor(BaseProcessor):
                                 'normalization': {'similar': 0, 'name': 0},
                                 'images': {},
                             }
+                        names_to_fbid[name] = tag['id']
                         names_to_scores[name]['images'][img] = distance
                         images_to_scores[img]['names'][name] = distance
         blob = {
             'names_to_scores': names_to_scores,
             'images_to_scores': images_to_scores,
+            'names_to_fbid': names_to_fbid,
             'engine': user_engine,
         }
         self.save_user_blob(blob, user_data)
@@ -230,6 +232,7 @@ class Pr0nProcessor(BaseProcessor):
         metric... but it seems to be good enough.
         """
         data = self.load_user_blob(user)
+        names_to_fbid = data['names_to_fbid']
         scores = []
         for name, data in data['names_to_scores'].items():
             name_score = data['scores']['name'] / \
@@ -239,7 +242,8 @@ class Pr0nProcessor(BaseProcessor):
             score = name_score + 0.5 * similarity_score
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
-        return [{"name": n, "score": s} for n, s in scores]
+        return [{"name": n, "score": s, "fbid": names_to_fbid[n]}
+                for n, s in scores]
 
     @process_api_handler
     def register_handlers(self):

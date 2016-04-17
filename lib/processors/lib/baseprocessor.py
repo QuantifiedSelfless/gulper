@@ -1,3 +1,4 @@
+from tornado import gen
 import logging
 import pickle
 import os
@@ -9,9 +10,15 @@ FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
 
 
 class BaseProcessor(object):
+    auth = True
+
     def __init__(self, *args, **kwargs):
         logging.basicConfig(format=FORMAT)
         self.logger = logging.getLogger("processor." + self.name)
+
+    @gen.coroutine
+    def process(self, user_data):
+        return True
 
     def save_user_blob(self, blob, user):
         filedata = dict(name=self.name, uid=user.userid)
@@ -37,3 +44,11 @@ class BaseProcessor(object):
             with open(filename, 'rb') as fd:
                 blob = fd.read()
                 return user.decrypt_blob(blob)
+
+    def load_keywords(self, datafile):
+        filename = './lib/processors/data/' + datafile
+        try:
+            with open(filename) as fd:
+                return [kw.strip() for kw in fd]
+        except IOError:
+            self.logger.exception("Could not load keywords: " + filename)
