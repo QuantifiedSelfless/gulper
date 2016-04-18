@@ -22,13 +22,13 @@ def process_api_handler(get_handlers):
         handlers = get_handlers(self)
         result = []
         checkauth = self.auth
-        result.append(('/{}'.format(self.name),
-                       make_permcheck(self.name, checkauth)))
         for path, handler in handlers:
             auth = getattr(handler, 'auth', checkauth)
             route = ("/{}/{}".format(self.name, path),
                      make_handler(self.name, handler, auth))
             result.append(route)
+        result.append(('/{}'.format(self.name),
+                       make_permcheck(self.name, checkauth)))
         return result
     return _
 
@@ -51,6 +51,8 @@ def make_handler(name, handler, checkauth):
             elif rfid:
                 rfidb = yield RFIDB.get_global()
                 user = yield rfidb.rfid_to_user(rfid)
+                if user is None:
+                    return self.error(403, "INVALID_RFID")
                 userid = user.userid
             if checkauth:
                 exibperm = yield ExhibitPermissions.get_global()
@@ -78,10 +80,11 @@ def make_permcheck(name, checkauth):
             userids = self.get_arguments('userid')
             rfids = self.get_arguments('rfid')
             if not checkauth:
-                return [{'userid': uid, 'rfid': None, 'permission': True}
-                        for uid in userids] + \
-                       [{'userid': None, 'rfid': rf, 'permission': True}
-                        for rf in rfids]
+                result = [{'userid': uid, 'rfid': None, 'permission': True}
+                          for uid in userids] + \
+                         [{'userid': None, 'rfid': rf, 'permission': True}
+                          for rf in rfids]
+                return self.api_response(result)
             exibperm = yield ExhibitPermissions.get_global()
             rfidb = yield RFIDB.get_global()
             result = []

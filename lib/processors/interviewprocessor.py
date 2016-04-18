@@ -60,8 +60,12 @@ class InterviewProcessor(BaseProcessor):
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
-                    if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
-                        pevents.append(event['name'])
+                    try:
+                        if token.lower() in event['name'].lower() or \
+                                token.lower() in event['description'].lower():
+                            pevents.append(event['name'])
+                    except AttributeError:
+                        pass
         return pevents
 
     def scan_neg_interests(self, nints, interests):
