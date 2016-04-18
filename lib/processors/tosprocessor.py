@@ -3,10 +3,6 @@ from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
 
-def question_similarity(A, B):
-    return len(A & B) / float(len(A | B))
-
-
 class TOSProcessor(BaseProcessor):
     name = 'tos_processor'
     auth = False
