@@ -14,7 +14,7 @@ from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
 
-POSES = (0, 1, )
+POSES = (0, 1, 2)
 
 
 class Pr0nProcessor(BaseProcessor):
@@ -221,12 +221,16 @@ class Pr0nProcessor(BaseProcessor):
         if all(d['scores']['direct'] != 0 for d in images_to_scores.values()):
             return {'url': None, 'id': None}
         scored_names = dict(self.score_names(data))
+        score_min = min(scored_names.values())
+        score_max = max(scored_names.values())
+        scored_names = {n: (s-score_min)/(score_max-score_min)
+                        for n, s in scored_names.items()}
         for attempts in range(10):
             for img, img_data in images_to_scores.items():
                 if img_data['scores']['direct'] != 0:
                     continue
                 for name in img_data['names'].keys():
-                    if random.random() < abs(scored_names[name] + 1.5) / 3.0:
+                    if random.random() < scored_names[name]:
                         pick_id = img
                         pick_data = self._get_img(pick_id)
                         return {'url': pick_data['url'], 'id': pick_id,
@@ -256,7 +260,7 @@ class Pr0nProcessor(BaseProcessor):
             similarity_score = data['scores']['similar'] /  \
                 (data['normalization']['similar'] or 1.0)
             gender_diff = abs(names_to_gender[name] - gender_pref)
-            score = (name_score + 0.5 * similarity_score) / (gender_diff + 1)
+            score = (name_score + 0.5 * similarity_score - gender_diff)
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
         return scores
