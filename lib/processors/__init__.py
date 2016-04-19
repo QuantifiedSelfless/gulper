@@ -14,6 +14,7 @@ from .mentalhealthprocessor import MentalHealthProcessor
 from .trackedprocessor import TrackedProcessor
 from .recommenderprocessor import RecommenderProcessor
 from .romanceprocessor import RomanceProcessor
+from .tosprocessor import TOSProcessor
 
 FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
 logger = logging.getLogger("processor.process")
@@ -30,6 +31,7 @@ processors = [
     RecommenderProcessor(),
     TrackedProcessor(),
     RomanceProcessor(),
+    TOSProcessor(),
     DebugProcessor()
 ]
 

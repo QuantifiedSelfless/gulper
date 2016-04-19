@@ -4,6 +4,7 @@ import pickle
 import os
 
 from ...config import CONFIG
+from .utils import process_api_handler
 
 
 FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
@@ -19,6 +20,14 @@ class BaseProcessor(object):
     @gen.coroutine
     def process(self, user_data):
         return True
+
+    @process_api_handler
+    def register_handlers(self):
+        """
+        Registers any http handlers that this processor wants to have availible
+        to exhibits
+        """
+        return []
 
     def save_user_blob(self, blob, user):
         filedata = dict(name=self.name, uid=user.userid)
