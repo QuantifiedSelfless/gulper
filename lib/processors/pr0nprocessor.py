@@ -169,6 +169,16 @@ class Pr0nProcessor(BaseProcessor):
                         names_to_gender[name] = self.get_gender(name)
                         names_to_scores[name]['images'][img] = distance
                         images_to_scores[img]['names'][name] = distance
+        to_trim = set()
+        for name, d in names_to_scores.items():
+            if len(d['images']) > 10:
+                images = list(d['images'].items())
+                sorted(images, key=lambda x: x[1])
+                d['images'] = dict(images[:10])
+                to_trim -= d['images'].keys()
+                to_trim.update(images[10:])
+        for img_del in to_trim:
+            images_to_scores.pop(img_del, None)
         blob = {
             'names_to_scores': names_to_scores,
             'names_to_gender': names_to_gender,
@@ -199,7 +209,6 @@ class Pr0nProcessor(BaseProcessor):
             dist = float(dist)
             names_data[name]['scores']['name'] += preference / dist
             names_data[name]['normalization']['name'] += 1.0 / dist
-            print(name, data['names_to_gender'][name], preference)
             data['gender_preference'][0] += data['names_to_gender'][name] * preference
             data['gender_preference'][1] += 1.0
         # increase all images that are similar
@@ -223,13 +232,18 @@ class Pr0nProcessor(BaseProcessor):
         scored_names = dict(self.score_names(data))
         score_min = min(scored_names.values())
         score_max = max(scored_names.values())
+        if not score_max:
+            score_min = -1
+            score_max = 1
         scored_names = {n: (s-score_min)/(score_max-score_min)
                         for n, s in scored_names.items()}
         for attempts in range(10):
-            for img, img_data in images_to_scores.items():
+            i2s = list(images_to_scores.items())
+            random.shuffle(i2s)
+            for img, img_data in i2s:
                 if img_data['scores']['direct'] != 0:
                     continue
-                for name in img_data['names'].keys():
+                for name, dist in img_data['names'].items():
                     if random.random() < scored_names[name]:
                         pick_id = img
                         pick_data = self._get_img(pick_id)
@@ -247,8 +261,16 @@ class Pr0nProcessor(BaseProcessor):
         data = self.load_user_blob(user)
         scores = self.score_names(data)
         names_to_fbid = data['names_to_fbid']
-        return [{"name": n, "score": s, "fbid": names_to_fbid[n]}
-                for n, s in scores]
+        names_to_scores = data['names_to_scores']
+        results = []
+        for name, score in scores:
+            d = {"name": name, "score": score,
+                 "fbid": names_to_fbid[name]}
+            images = names_to_scores[name]['images']
+            pick_id = min(images, key=images.get)
+            d['url'] = self._get_img(pick_id)['url']
+            results.append(d)
+        return results
 
     def score_names(self, data):
         names_to_gender = data['names_to_gender']
@@ -260,6 +282,7 @@ class Pr0nProcessor(BaseProcessor):
             similarity_score = data['scores']['similar'] /  \
                 (data['normalization']['similar'] or 1.0)
             gender_diff = abs(names_to_gender[name] - gender_pref)
+            gender_diff = max(gender_diff - 0.75, 0.0)
             score = (name_score + 0.5 * similarity_score - gender_diff)
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
