@@ -6,14 +6,18 @@
  greed
  amazing
  enjoyable
+ enjoyed
  terrible
  angry
  corrupt
+ corruption
  fun
  happiness
  comfort
  shitty
  nothing
+ depressed
+ depressing
  sharing
  privileged
  lucky
@@ -28,19 +32,23 @@
  easy
  boredom
  confusion
+ confused
  pride
  confidence
  doubt
  fear
+ scared
  disappointment
  diligence
  excitement
+ excited
  sad
  interesting
  sexy
  love
  hate
  anxiety
+ anxious
  anger
  annoyance
  frustration
@@ -58,3 +66,5 @@
  hate
  impatience
  patience
+ impatient
+ patient
