@@ -20,6 +20,13 @@ class BaseProcessor(object):
     def process(self, user_data):
         return True
 
+    def register_handlers(self):
+        """
+        Registers any http handlers that this processor wants to have availible
+        to exhibits
+        """
+        return []
+
     def save_user_blob(self, blob, user):
         filedata = dict(name=self.name, uid=user.userid)
         os.makedirs("./data/{name}/user".format(**filedata), exist_ok=True)
