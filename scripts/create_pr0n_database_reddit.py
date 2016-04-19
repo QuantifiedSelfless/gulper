@@ -21,7 +21,7 @@ detector = dlib.get_frontal_face_detector()
 
 
 def load_data(fname):
-    abs_path = './data/pr0n/backend/{0[0]}/{0[1]}/{0}'.format(fname)
+    abs_path = './data/pr0n_processor/backend/{0[0]}/{0[1]}/{0}'.format(fname)
     with open(abs_path, 'rb') as fd:
         return pickle.load(fd)
 
@@ -51,7 +51,7 @@ def skip_unfound(_iter):
 
 
 @gen.coroutine
-def process_subreddit(subreddit, data_path='./data/pr0n/backend/'):
+def process_subreddit(subreddit, data_path='./data/pr0n_processor/backend/'):
     reddit = praw.Reddit(user_agent='gulperpr0n')
     submissions = skip_unfound(chain(
         reddit.get_subreddit(subreddit).get_hot(),
@@ -111,8 +111,12 @@ def process_subreddit(subreddit, data_path='./data/pr0n/backend/'):
 def process_subreddits():
     reddit = praw.Reddit(user_agent='gulperpr0n')
     with open('scripts/subreddits.txt') as fd:
-        subreddits = list({s.strip() for s in fd})
-    subreddits_done = set()
+        subreddits = [s.strip() for s in fd]
+    try:
+        with open('scripts/subreddits_done.txt') as fd:
+            subreddits_done = set(s.strip() for s in fd)
+    except IOError:
+        subreddits_done = set()
     while True:
         new_subreddits = set()
         while subreddits:
@@ -120,7 +124,7 @@ def process_subreddits():
             print("[{}] Exploring subreddits: {}".
                   format(len(subreddits), ', '.join(todo)))
             try:
-                yield [process_subreddit(s) for s in todo]
+                yield [process_subreddit(s) for s in todo if s not in subreddits_done]
             except Exception as e:
                 print("Got unhandled exception in process: ", e)
             for sub in todo:

@@ -51,6 +51,7 @@ def process(user_data):
             result[p.name] = permission
             yield exibperm.save_permission(
                 user_data.userid,
+                user_data.meta['name'],
                 p.name,
                 permission
             )

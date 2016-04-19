@@ -1,17 +1,17 @@
 from tornado import gen
 
-from .youtube import YouTubeScraper
-from .gphotos import GPhotosScraper
 from .fbphotos import FBPhotosScraper
 from .gmailscrape import GMailScraper
 from .fbtext import FBTextScraper
 from .fblikes import FBLikesScraper
 from .fbevents import FBEventsScraper
 from .fbprofile import FBProfileScraper
-from .tumblrscrape import TumblrScraper
 from .redditscrape import RedditScraper
-from .spotifyscrape import SpotifyScraper
 from .twitter import TwitterScraper
+from .spotifyscrape import SpotifyScraper
+from .youtube import YouTubeScraper
+from .gphotos import GPhotosScraper
+from .tumblrscrape import TumblrScraper
 
 import traceback
 
@@ -40,6 +40,6 @@ def scrape(user_data):
             data[s.name] = yield s.scrape(user_data)
         except Exception as e:
             data[s.name] = None
-            print("Scraper {} gave exception: {}".format(s.name, e))
+            print("[{}] Scraper {} gave exception: {}".format(user_data.userid, s.name, e))
             traceback.print_exc()
     return data

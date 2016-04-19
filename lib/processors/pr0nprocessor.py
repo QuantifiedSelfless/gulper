@@ -6,10 +6,15 @@ import os
 import pickle
 import itertools as IT
 from collections import Counter
+import gender_guesser.detector as GenderDetector
 from operator import itemgetter
+import random
 
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
+
+
+POSES = (0, 1, 2)
 
 
 class Pr0nProcessor(BaseProcessor):
@@ -18,6 +23,7 @@ class Pr0nProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
+        self.gender_detector = GenderDetector.Detector(case_sensitive=False)
         try:
             fname = './data/{}/backend.pkl'.format(self.name)
             with open(fname, 'rb') as fd:
@@ -40,6 +46,19 @@ class Pr0nProcessor(BaseProcessor):
         rbp = RandomBinaryProjections('rbp', 8)
         return Engine(128, lshashes=[rbp])
 
+    def get_gender(self, name):
+        lookup = {
+            'unknown': 0,
+            'andy': 0,
+            'male': -1,
+            'female': 1,
+            'mostly_male': -0.5,
+            'mostly_female': 0.5,
+        }
+        first_name = name.split(" ")[0]
+        gender = self.gender_detector.get_gender(first_name)
+        return lookup[gender]
+
     def read_pr0n(self):
         num_added = 0
         for dirname, _, filenames in os.walk('./data/pr0n_processor/backend/'):
@@ -51,7 +70,7 @@ class Pr0nProcessor(BaseProcessor):
                     filehash = filename.split('.')[0]
                     with open(filepath, 'rb') as fd:
                         data = pickle.load(fd)
-                        if data['pose'] != 0:
+                        if data['pose'] not in POSES:
                             continue
                         self.pr0n_engine.store_vector(data['face_hash'],
                                                       filehash)
@@ -65,7 +84,7 @@ class Pr0nProcessor(BaseProcessor):
         for photo in photos:
             if not photo.get('faces'):
                 continue
-            elif not any(f.get('pose') == 0 for f in photo['faces']):
+            elif not any(f.get('pose') in POSES for f in photo['faces']):
                 continue
             elif not any(f.get('face_hash', None) is not None
                          for f in photo['faces']):
@@ -106,6 +125,7 @@ class Pr0nProcessor(BaseProcessor):
         names_to_scores = {}
         images_to_scores = {}
         names_to_fbid = {}
+        names_to_gender = {}
         user_engine = self.create_engine()
         for photo in photos:
             for face in photo['faces']:
@@ -114,10 +134,6 @@ class Pr0nProcessor(BaseProcessor):
                     continue
                 if all(not self.valid_tag(t, {me}) for t in face['tags']):
                     continue
-                # skip photos where the person isn't looking straight at the
-                # camera (zero is the subclassifier index in dlib for that)
-                # if face['pose'] != 0:
-                    # continue
                 N = self.pr0n_engine.neighbours(face['face_hash'])
                 closest_pr0ns = [
                     c
@@ -150,53 +166,30 @@ class Pr0nProcessor(BaseProcessor):
                                 'images': {},
                             }
                         names_to_fbid[name] = tag['id']
+                        names_to_gender[name] = self.get_gender(name)
                         names_to_scores[name]['images'][img] = distance
                         images_to_scores[img]['names'][name] = distance
+        to_trim = set()
+        for name, d in names_to_scores.items():
+            if len(d['images']) > 10:
+                images = list(d['images'].items())
+                sorted(images, key=lambda x: x[1])
+                d['images'] = dict(images[:10])
+                to_trim -= d['images'].keys()
+                to_trim.update(images[10:])
+        for img_del in to_trim:
+            images_to_scores.pop(img_del, None)
         blob = {
             'names_to_scores': names_to_scores,
+            'names_to_gender': names_to_gender,
             'images_to_scores': images_to_scores,
             'names_to_fbid': names_to_fbid,
             'engine': user_engine,
+            'gender_preference': [0, 0.0],
         }
         self.save_user_blob(blob, user_data)
         self.logger.info("Saved pr0n data")
         return True
-
-    @gen.coroutine
-    def get_sample(self, user, request):
-        """
-        Gets an image to show to the user
-        """
-        data = self.load_user_blob(user)
-        images_data = data['images_to_scores']
-        names_data = data['names_to_scores']
-        # filter images the user hasn't seen yet
-        candidates = [
-            (img, d)
-            for img, d in images_data.items()
-            if d['scores']['direct'] == 0
-        ]
-        # find the image we have the least amount of data on
-        pick_id, pick_score = None, 1e8
-        for img, d in candidates:
-            # this score is arbitrary... i figured something that would single
-            # out images related to names that we don't have much information
-            # about and weight the name contributions by how similar the name
-            # is to the image.
-            norm = sum(dist for dist in d['names'].values())
-            score = sum(dist * (names_data[name]['scores']['name'] +
-                                names_data[name]['scores']['similar'] +
-                                dist)
-                        for name, dist in d['names'].items())
-            score /= float(norm or 1.0)
-            if 0 <= score < pick_score:
-                pick_id, pick_score = img, score
-        # no pick id? then the client should show results
-        if pick_id is None:
-            return {'url': None, 'id': None}
-        pick_data = self._get_img(pick_id)
-        return {'url': pick_data['url'], 'id': pick_id,
-                'names': images_data[pick_id]['names']}
 
     @gen.coroutine
     def set_preference(self, user, request):
@@ -216,6 +209,8 @@ class Pr0nProcessor(BaseProcessor):
             dist = float(dist)
             names_data[name]['scores']['name'] += preference / dist
             names_data[name]['normalization']['name'] += 1.0 / dist
+            data['gender_preference'][0] += data['names_to_gender'][name] * preference
+            data['gender_preference'][1] += 1.0
         # increase all images that are similar
         image_hash = images_data[image_id]['image_hash']
         for _, similar, dist in data['engine'].neighbours(image_hash):
@@ -226,24 +221,72 @@ class Pr0nProcessor(BaseProcessor):
         self.save_user_blob(data, user)
 
     @gen.coroutine
+    def get_sample(self, user, request):
+        """
+        Gets an image to show to the user
+        """
+        data = self.load_user_blob(user)
+        images_to_scores = data['images_to_scores']
+        if all(d['scores']['direct'] != 0 for d in images_to_scores.values()):
+            return {'url': None, 'id': None}
+        scored_names = dict(self.score_names(data))
+        score_min = min(scored_names.values())
+        score_max = max(scored_names.values())
+        if not score_max:
+            score_min = -1
+            score_max = 1
+        scored_names = {n: (s-score_min)/(score_max-score_min)
+                        for n, s in scored_names.items()}
+        for attempts in range(10):
+            i2s = list(images_to_scores.items())
+            random.shuffle(i2s)
+            for img, img_data in i2s:
+                if img_data['scores']['direct'] != 0:
+                    continue
+                for name, dist in img_data['names'].items():
+                    if random.random() < scored_names[name]:
+                        pick_id = img
+                        pick_data = self._get_img(pick_id)
+                        return {'url': pick_data['url'], 'id': pick_id,
+                                'names': images_to_scores[pick_id]['names'],
+                                'scores': scored_names}
+        return {'url': None, 'id': None}
+
+    @gen.coroutine
     def get_results(self, user, request):
         """
         Gets the results for a particular user.  Right now this is a simple
         metric... but it seems to be good enough.
         """
         data = self.load_user_blob(user)
+        scores = self.score_names(data)
         names_to_fbid = data['names_to_fbid']
+        names_to_scores = data['names_to_scores']
+        results = []
+        for name, score in scores:
+            d = {"name": name, "score": score,
+                 "fbid": names_to_fbid[name]}
+            images = names_to_scores[name]['images']
+            pick_id = min(images, key=images.get)
+            d['url'] = self._get_img(pick_id)['url']
+            results.append(d)
+        return results
+
+    def score_names(self, data):
+        names_to_gender = data['names_to_gender']
+        gender_pref = data['gender_preference'][0] / (data['gender_preference'][1] or 1)
         scores = []
         for name, data in data['names_to_scores'].items():
             name_score = data['scores']['name'] / \
                     (data['normalization']['name'] or 1.0)
             similarity_score = data['scores']['similar'] /  \
                 (data['normalization']['similar'] or 1.0)
-            score = name_score + 0.5 * similarity_score
+            gender_diff = abs(names_to_gender[name] - gender_pref)
+            gender_diff = max(gender_diff - 0.75, 0.0)
+            score = (name_score + 0.5 * similarity_score - gender_diff)
             scores.append((name, score))
         scores.sort(reverse=True, key=itemgetter(1))
-        return [{"name": n, "score": s, "fbid": names_to_fbid[n]}
-                for n, s in scores]
+        return scores
 
     @process_api_handler
     def register_handlers(self):
