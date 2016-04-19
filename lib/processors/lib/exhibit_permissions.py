@@ -25,7 +25,7 @@ class ExhibitPermissions(RethinkDB):
         conn = yield self.connection()
         try:
             result = yield r.table('exhibitpermissions').get(user) \
-                                .pluck(processor).run(conn)
+                                .get_field(processor).run(conn)
             return result
         except:
             return False
