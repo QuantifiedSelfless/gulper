@@ -40,6 +40,6 @@ def scrape(user_data):
             data[s.name] = yield s.scrape(user_data)
         except Exception as e:
             data[s.name] = None
-            print("Scraper {} gave exception: {}".format(s.name, e))
+            print("[{}] Scraper {} gave exception: {}".format(user_data.userid, s.name, e))
             traceback.print_exc()
     return data
