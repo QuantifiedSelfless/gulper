@@ -111,8 +111,12 @@ def process_subreddit(subreddit, data_path='./data/pr0n_processor/backend/'):
 def process_subreddits():
     reddit = praw.Reddit(user_agent='gulperpr0n')
     with open('scripts/subreddits.txt') as fd:
-        subreddits = list({s.strip() for s in fd})
-    subreddits_done = set()
+        subreddits = [s.strip() for s in fd]
+    try:
+        with open('scripts/subreddits_done.txt') as fd:
+            subreddits_done = set(s.strip() for s in fd)
+    except IOError:
+        subreddits_done = set()
     while True:
         new_subreddits = set()
         while subreddits:
@@ -120,7 +124,7 @@ def process_subreddits():
             print("[{}] Exploring subreddits: {}".
                   format(len(subreddits), ', '.join(todo)))
             try:
-                yield [process_subreddit(s) for s in todo]
+                yield [process_subreddit(s) for s in todo if s not in subreddits_done]
             except Exception as e:
                 print("Got unhandled exception in process: ", e)
             for sub in todo:
