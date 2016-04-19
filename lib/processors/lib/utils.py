@@ -57,6 +57,7 @@ def make_handler(name, handler, checkauth):
             if checkauth:
                 exibperm = yield ExhibitPermissions.get_global()
                 permission = yield exibperm.has_permission(userid, name)
+                print(userid, permission)
                 if permission is not True:
                     return self.error(403, "NO_ACCESS: {}".format(userid))
             data = yield handler(user, self)
