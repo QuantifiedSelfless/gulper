@@ -1,3 +1,4 @@
+set -e
 echo "Installing system packages"
 
 # ubuntu 14.04 ships with an OOLLLDDD version of cmake
@@ -67,7 +68,9 @@ if [ ! -d ~/torch ]; then
     bash install-deps;
     ./install.sh -b
     source ~/.bashrc
-    luarocks install dpnn
+    for X in dpnn nn optim csvigo cutorch cunn fblualib torchx; do 
+        luarocks install $X; 
+    done
     popd
 fi
 
