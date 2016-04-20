@@ -51,8 +51,11 @@ class InterviewProcessor(BaseProcessor):
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
-                    if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
-                        nevents.append(event['name'])
+                    try:
+                        if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
+                            nevents.append(event['name'])
+                    except AttributeError:
+                        pass
         return nevents
 
     def scan_pos_events(self, pevents, allevents):
