@@ -147,19 +147,22 @@ class TruthProcessor(BaseProcessor):
 
         if user_data.data.get('gmail'):
             if user_data.data['gmail'].get('people') is not None:
-                gpeople = itertools.chain.from_iterable(
-                    user_data.data['gmail']['people'])
-                cleaned = self.check_names(
-                    gpeople,
-                    user_data.meta['name'].rsplit(' ', 1)[-1]
-                )
-                true, lie = self.common_email_contact(cleaned)
-                if random.randint(0, 1) == 0:
-                    truth_data['true'].append(
-                        "Your most common gmail contact is {0}".format(true))
-                else:
-                    truth_data['false'].append(
-                        "Your most common gmail contact is {0}".format(lie))
+                try:
+                    gpeople = itertools.chain.from_iterable(
+                        user_data.data['gmail']['people'])
+                    cleaned = self.check_names(
+                        gpeople,
+                        user_data.meta['name'].rsplit(' ', 1)[-1]
+                    )
+                    true, lie = self.common_email_contact(cleaned)
+                    if random.randint(0, 1) == 0:
+                        truth_data['true'].append(
+                            "Your most common gmail contact is {0}".format(true))
+                    else:
+                        truth_data['false'].append(
+                            "Your most common gmail contact is {0}".format(lie))
+                except IndexError:
+                    pass
             gwords = self.get_words(user_data.data['gmail']['text'])
             gfreq = self.word_freq(gwords)
             if random.randint(0, 1) == 0:
@@ -206,16 +209,19 @@ class TruthProcessor(BaseProcessor):
                     truth_data['true'], truth_data['false'], 0)
 
         if user_data.data.get('reddit'):
-            fact, lie = self.common_subreddit(
-                user_data.data['reddit']['submissions'])
-            if (len(truth_data['true']) < len(truth_data['false'])):
-                truth_data['true'].append(
-                    "Your most common subreddit you submit to is {0}".format(
-                        fact))
-            else:
-                truth_data['false'].append(
-                    "Your most common subreddit you submit to is {0}".format(
-                        lie))
+            try:
+                fact, lie = self.common_subreddit(
+                    user_data.data['reddit']['submissions'])
+                if (len(truth_data['true']) < len(truth_data['false'])):
+                    truth_data['true'].append(
+                        "Your most common subreddit you submit to is {0}".format(
+                            fact))
+                else:
+                    truth_data['false'].append(
+                        "Your most common subreddit you submit to is {0}".format(
+                            lie))
+            except IndexError:
+                pass
 
         truth_data['true'] = self.fill_truths(truth_data['true'])
         truth_data['false'] = self.fill_lies(truth_data['false'])

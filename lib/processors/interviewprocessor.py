@@ -51,7 +51,9 @@ class InterviewProcessor(BaseProcessor):
         for wlist in wordlists:
             for token in wlist:
                 for event in allevents:
-                    if token.lower() in event['name'].lower() or token.lower() in event['description'].lower():
+                    if event.get('name') and token.lower() in event['name'].lower():
+                        nevents.append(event['name'])
+                    if event.get('description') and token.lower() in event['description'].lower():
                         nevents.append(event['name'])
         return nevents
 
