@@ -39,8 +39,11 @@ class ShowtimeProcess(BaseHandler):
 
         # we could also just pass the raw arguments, but this is more explicit
         # and 'self documenting'
-        params = {'showtime_id': showid, 'shares': shares,
-                  'passphrase': passphrase}
+        params = [('showtime_id', showid)]
+        if passphrase:
+            params += [('passphrase', passphrase)]
+        elif shares:
+            params += [('share', s) for s in shares]
         url = url_concat(ticket_api + '/api/showtimes/access_tokens', params)
         show_data_raw = yield httpclient.fetch(url)
         if show_data_raw.code != 200:
