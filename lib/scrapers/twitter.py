@@ -8,9 +8,15 @@ class TwitterScraper(object):
     name = 'twitter'
 
     @property
-    def num_scrape(self):
+    def tweet_scrape(self):
         if CONFIG['_mode'] == 'prod':
             return 250
+        return 10
+
+    @property
+    def follow_scrape(self):
+        if CONFIG['_mode'] == 'prod':
+            return 75
         return 10
 
     @gen.coroutine
@@ -18,7 +24,7 @@ class TwitterScraper(object):
         data = []
         count = 0
         for follow in follow_list:
-            if count > self.num_scrape:
+            if count > self.follow_scrape:
                 break
             user = {}
             for _ in range(3):
@@ -38,32 +44,11 @@ class TwitterScraper(object):
         return data
 
     @gen.coroutine
-    def all_favs(self, api, favs):
-        data = []
-        count = 0
-        res = favs
-        while count < self.num_scrape and len(res) > 0:
-            for fav in res:
-                data.append(fav.text)
-                count += 1
-            max_id = res.max_id
-            for _ in range(3):
-                try:
-                    res = api.favorites(max_id=max_id)
-                    break
-                except tweepy.RateLimitError:
-                    yield gen.sleep(5 * 60)
-            else:
-                continue
-
-        return data
-
-    @gen.coroutine
     def all_tweets(self, api, total, tweets):
         data = []
         count = 0
         res = tweets
-        while len(data) < total and count < self.num_scrape and len(res) > 0:
+        while len(data) < total and count < self.tweet_scrape and len(res) > 0:
             for tweet in res:
                 data.append(tweet.text)
                 count += 1
@@ -113,9 +98,6 @@ class TwitterScraper(object):
 
         following = api.friends_ids()
         data["following"] = yield self.all_following(api, following)
-
-        favs = api.favorites()
-        data['favorites'] = yield self.all_favs(api, favs)
 
         tweets = api.user_timeline()
         data['tweets'] = yield self.all_tweets(api, me.statuses_count, tweets)
