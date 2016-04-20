@@ -206,16 +206,17 @@ class TruthProcessor(BaseProcessor):
                     truth_data['true'], truth_data['false'], 0)
 
         if user_data.data.get('reddit'):
-            fact, lie = self.common_subreddit(
-                user_data.data['reddit']['submissions'])
-            if (len(truth_data['true']) < len(truth_data['false'])):
-                truth_data['true'].append(
-                    "Your most common subreddit you submit to is {0}".format(
-                        fact))
-            else:
-                truth_data['false'].append(
-                    "Your most common subreddit you submit to is {0}".format(
-                        lie))
+            if len(user_data.data['reddit']['submissions'] > 0):
+                fact, lie = self.common_subreddit(
+                    user_data.data['reddit']['submissions'])
+                if (len(truth_data['true']) < len(truth_data['false'])):
+                    truth_data['true'].append(
+                        "Your most common subreddit you submit to is {0}".format(
+                            fact))
+                else:
+                    truth_data['false'].append(
+                        "Your most common subreddit you submit to is {0}".format(
+                            lie))
 
         truth_data['true'] = self.fill_truths(truth_data['true'])
         truth_data['false'] = self.fill_lies(truth_data['false'])
