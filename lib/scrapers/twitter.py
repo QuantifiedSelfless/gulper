@@ -74,7 +74,7 @@ class TwitterScraper(object):
         )
         auth.access_token = twitter_creds['access_token']
         auth.access_token_secret = twitter_creds['access_token_secret']
-        api = tweepy.API(auth, wait_on_rate_limit=True,
+        api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True,
                          retry_count=3, retry_delay=5)
 
         data = {}
