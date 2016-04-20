@@ -66,8 +66,6 @@ class TwitterScraper(object):
         if 'denied' in twitter_creds:
             return False
 
-        print(CONFIG.get('twitter_client_id'))
-        print(CONFIG.get('twitter_client_secret'))
         client_key = CONFIG.get('twitter_client_id')
         client_secret = CONFIG.get('twitter_client_secret')
         auth = tweepy.OAuthHandler(
@@ -76,7 +74,8 @@ class TwitterScraper(object):
         )
         auth.access_token = twitter_creds['access_token']
         auth.access_token_secret = twitter_creds['access_token_secret']
-        api = tweepy.API(auth)
+        api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True,
+                         retry_count=3, retry_delay=5)
 
         data = {}
 
