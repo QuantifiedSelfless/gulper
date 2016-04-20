@@ -8,6 +8,7 @@ dlib
 praw
 git+https://github.com/pythonforfacebook/facebook-sdk.git
 git+https://github.com/pixelogik/NearPy.git
+git+https://github.com/mynameisfiber/cryptohelper.git
 ujson
 spotipy
 rethinkdb
