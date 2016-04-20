@@ -21,7 +21,12 @@ class TwitterScraper(object):
             if count > self.num_scrape:
                 break
             user = {}
-            nextone = api.get_user(follow)
+            try:
+                nextone = api.get_user(follow)
+            except tweepy.RateLimitError:
+                yield gen.sleep(15 * 60)
+                nextone = api.get_user(follow)
+
             user['name'] = nextone.name
             user['description'] = nextone.description
             data.append(user)
@@ -39,7 +44,12 @@ class TwitterScraper(object):
                 data.append(fav.text)
                 count += 1
             max_id = res.max_id
-            res = api.favorites(max_id=max_id)
+            try:
+                res = api.favorites(max_id=max_id)
+            except tweepy.RateLimitError:
+                yield gen.sleep(15 * 60)
+                res = api.favorites(max_id=max_id)
+
         return data
 
     @gen.coroutine
@@ -52,7 +62,12 @@ class TwitterScraper(object):
                 data.append(tweet.text)
                 count += 1
             max_id = res.max_id
-            res = api.user_timeline(max_id=max_id)
+            try:
+                res = api.user_timeline(max_id=max_id)
+            except tweepy.RateLimitError:
+                yield gen.sleep(15 * 60)
+                res = api.user_timeline(max_id=max_id)
+
         return data
 
     @gen.coroutine
@@ -74,8 +89,7 @@ class TwitterScraper(object):
         )
         auth.access_token = twitter_creds['access_token']
         auth.access_token_secret = twitter_creds['access_token_secret']
-        api = tweepy.API(auth, wait_on_rate_limit=True,
-                         retry_count=3, retry_delay=5)
+        api = tweepy.API(auth)
 
         data = {}
 
