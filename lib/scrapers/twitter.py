@@ -10,7 +10,7 @@ class TwitterScraper(object):
     @property
     def num_scrape(self):
         if CONFIG['_mode'] == 'prod':
-            return 1000
+            return 250
         return 10
 
     @gen.coroutine
@@ -21,11 +21,14 @@ class TwitterScraper(object):
             if count > self.num_scrape:
                 break
             user = {}
-            try:
-                nextone = api.get_user(follow)
-            except tweepy.RateLimitError:
-                yield gen.sleep(15 * 60)
-                nextone = api.get_user(follow)
+            for _ in range(3):
+                try:
+                    nextone = api.get_user(follow)
+                    break
+                except tweepy.RateLimitError:
+                    yield gen.sleep(5 * 60)
+            else:
+                continue
 
             user['name'] = nextone.name
             user['description'] = nextone.description
@@ -44,11 +47,14 @@ class TwitterScraper(object):
                 data.append(fav.text)
                 count += 1
             max_id = res.max_id
-            try:
-                res = api.favorites(max_id=max_id)
-            except tweepy.RateLimitError:
-                yield gen.sleep(15 * 60)
-                res = api.favorites(max_id=max_id)
+            for _ in range(3):
+                try:
+                    res = api.favorites(max_id=max_id)
+                    break
+                except tweepy.RateLimitError:
+                    yield gen.sleep(5 * 60)
+            else:
+                continue
 
         return data
 
@@ -62,11 +68,14 @@ class TwitterScraper(object):
                 data.append(tweet.text)
                 count += 1
             max_id = res.max_id
-            try:
-                res = api.user_timeline(max_id=max_id)
-            except tweepy.RateLimitError:
-                yield gen.sleep(15 * 60)
-                res = api.user_timeline(max_id=max_id)
+            for _ in range(3):
+                try:
+                    res = api.user_timeline(max_id=max_id)
+                    break
+                except tweepy.RateLimitError:
+                    yield gen.sleep(5 * 60)
+            else:
+                continue
 
         return data
 
