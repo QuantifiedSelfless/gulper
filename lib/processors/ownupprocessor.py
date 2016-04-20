@@ -3,6 +3,8 @@ from tornado import gen
 from .lib.utils import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
+import random
+
 
 class OwnupProcessor(BaseProcessor):
     name = 'ownup'
@@ -15,7 +17,7 @@ class OwnupProcessor(BaseProcessor):
     def is_great_quote(self, text):
         text = text.lower()
         for word in self.keywords:
-            if text.find(word) > 0:
+            if text.find(word) >= 0:
                 return True
         return False
 
@@ -29,8 +31,10 @@ class OwnupProcessor(BaseProcessor):
         for sentence in sentences:
             if self.is_great_quote(sentence):
                 perm.append(sentence)
-            elif len(sentence) > 5:
+                random.shuffle(perm)
+            elif len(sentence) > 15:
                 temp.append(sentence)
+                random.shuffle(perm)
         return True
 
     def process_facebook(self, user_data, temp, perm):
