@@ -163,18 +163,20 @@ class TruthProcessor(BaseProcessor):
                             "Your most common gmail contact is {0}".format(lie))
                 except IndexError:
                     pass
-            gwords = self.get_words(user_data.data['gmail']['text'])
-            gfreq = self.word_freq(gwords)
-            if random.randint(0, 1) == 0:
-                truth_data['true'].append(
-                    "Besides articles, prepositions, and pronouns your most "
-                    "common word in email is {0}".format(gfreq[0][1]))
-            else:
-                word_len = len(gfreq)
-                grab = round(word_len * .5)
-                truth_data['false'].append(
-                    "Besides articles, prepositions, and pronouns your most "
-                    "common word in email is \"{0}\"".format(gfreq[grab][1]))
+            if user_data.data['gmail'].get('text'):
+                gwords = self.get_words(user_data.data['gmail']['text'])
+                gfreq = self.word_freq(gwords)
+                if len(gfreq > 0):
+                    if random.randint(0, 1) == 0:
+                        truth_data['true'].append(
+                            "Besides articles, prepositions, and pronouns your most "
+                            "common word in email is {0}".format(gfreq[0][1]))
+                    else:
+                        word_len = len(gfreq)
+                        grab = round(word_len * .5)
+                        truth_data['false'].append(
+                            "Besides articles, prepositions, and pronouns your most "
+                            "common word in email is \"{0}\"".format(gfreq[grab][1]))
 
         if user_data.data.get('fbtext'):
             text_list = [post['text']

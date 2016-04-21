@@ -54,7 +54,8 @@ class FBPhotosScraper(object):
         )
         photos_friends = [photo
                           for d in photos_friends_raw
-                          for photo in d['photos']['data']]
+                          for photo in d['photos']['data']
+                          if d.get('photos')]
 
         photos_me = yield self.parse_photos(graph, photos_me)
         photos_uploaded = yield self.parse_photos(graph, photos_uploaded)
