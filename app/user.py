@@ -45,7 +45,7 @@ class ShowtimeProcess(BaseHandler):
         elif shares:
             params += [('share', s) for s in shares]
         url = url_concat(ticket_api + '/api/showtimes/access_tokens', params)
-        show_data_raw = yield httpclient.fetch(url)
+        show_data_raw = yield httpclient.fetch(url, request_timeout=180)
         if show_data_raw.code != 200:
             return self.error(show_data_raw.code, show_data_raw.body)
         show_data = json.loads(show_data_raw.body)
