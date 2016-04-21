@@ -1,7 +1,7 @@
 from tornado import gen
 import itertools as IT
 
-from .lib.utils import process_api_handler
+from .lib.handler import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
 

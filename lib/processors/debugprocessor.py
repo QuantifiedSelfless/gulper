@@ -8,7 +8,6 @@ from .lib.baseprocessor import BaseProcessor
 
 class DebugProcessor(BaseProcessor):
     name = 'debug_processor'
-    data = {}
 
     @gen.coroutine
     def process(self, user_data):
@@ -24,6 +23,3 @@ class DebugProcessor(BaseProcessor):
         self.logger.info("Saved user {} to {}".format(user_data.userid,
                                                       filename))
         return True
-
-    def register_handlers(self):
-        return []

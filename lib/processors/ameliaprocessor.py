@@ -1,5 +1,5 @@
 from tornado import gen
-from .lib.utils import process_api_handler
+from .lib.handler import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
 from collections import defaultdict
@@ -34,6 +34,14 @@ class AmeliaProcessor(BaseProcessor):
         filename = "./data/{}/{}.json".format(self.name, user_data.userid)
         with open(filename, "w+") as fd:
             json.dump(data, fd)
+
+    def delete_data(self, user_data):
+        filename = "./data/{}/{}.json".format(self.name, user_data.userid)
+        try:
+            os.remove(filename)
+            return True
+        except FileNotFoundError:
+            return False
 
     @gen.coroutine
     def get_friend(self, user, request):
