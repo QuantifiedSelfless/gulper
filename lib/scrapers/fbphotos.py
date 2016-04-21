@@ -107,6 +107,7 @@ class FBPhotosScraper(object):
                     t
                 )
                 for t in photo['tags']['data']
+                if t.get('x') and t.get('y')
             ]
             faces = yield find_faces_url(image_url['source'], hash_face=True)
             # go through the faces _we_ found and interpolate those results
