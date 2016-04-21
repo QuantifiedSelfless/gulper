@@ -52,9 +52,13 @@ class FBPhotosScraper(object):
             ),
             max_results=self.num_images_per_user
         )
-        photos_friends = [photo
-                          for d in photos_friends_raw
-                          for photo in d['photos']['data']]
+        photos_friends = []
+        for d in photos_friends_raw:
+            try:
+                for photo in d['photos']['data']:
+                    photos_friends.append(photo)
+            except KeyError:
+                pass
 
         photos_me = yield self.parse_photos(graph, photos_me)
         photos_uploaded = yield self.parse_photos(graph, photos_uploaded)
