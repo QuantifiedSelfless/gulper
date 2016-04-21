@@ -12,20 +12,27 @@ class ExhibitPermissions(RethinkDB):
                          ['exhibitpermissions'])
 
     @gen.coroutine
-    def save_permission(self, user, name, processor, permission):
+    def save_permission(self, user_data, processor, permission):
         conn = yield self.connection()
         yield r.table('exhibitpermissions').insert({
-            'id': user,
-            'name': name,
+            'id': user_data.userid,
+            'name': user_data.meta.get('name'),
             processor: permission,
         }, conflict='update').run(conn)
+
+    @gen.coroutine
+    def delete_permissions(self, user_data):
+        conn = yield self.connection()
+        result = yield r.table('exhibitpermissions').get(user_data.userid) \
+                        .delete().run(conn)
+        return bool(result.get('deleted'))
 
     @gen.coroutine
     def has_permission(self, user, processor):
         conn = yield self.connection()
         try:
             result = yield r.table('exhibitpermissions').get(user) \
-                                .get_field(processor).run(conn)
+                            .get_field(processor).run(conn)
             return result
         except:
             return False

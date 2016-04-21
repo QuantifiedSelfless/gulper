@@ -4,7 +4,8 @@ import pickle
 import os
 
 from ...config import CONFIG
-from .utils import process_api_handler
+from .handler import process_api_handler, authentication
+from .exhibit_permissions import ExhibitPermissions
 
 
 FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
@@ -19,6 +20,46 @@ class BaseProcessor(object):
 
     @gen.coroutine
     def process(self, user_data):
+        return True
+
+    @gen.coroutine
+    def start(self, user_data):
+        exibperm = yield ExhibitPermissions.get_global()
+        try:
+            self.logger.debug("Starting for " + user_data.userid)
+            permission = yield self.process(user_data)
+        except Exception:
+            permission = None
+            self.logger.exception("Excpetion while parsing user: %s",
+                                  user_data.userid)
+        finally:
+            self.logger.debug("Saving permission for: %s: %s",
+                              user_data.userid, permission)
+            yield exibperm.save_permission(
+                user_data,
+                self.name,
+                permission
+            )
+        return permission
+
+    @authentication(False)
+    @gen.coroutine
+    def delete_data(self, user_data):
+        """
+        Default delete_data will only delete permissions for the given user and
+        any data saved using BaseProcessor's save_user_blob method.
+        """
+        filedata = dict(name=self.name, uid=user_data.userid)
+        try:
+            filename = "./data/{name}/user/{uid}.pkl".format(**filedata)
+            os.remove(filename)
+        except FileNotFoundError:
+            pass
+        try:
+            filename = "./data/{name}/user/{uid}.enc".format(**filedata)
+            os.remove(filename)
+        except FileNotFoundError:
+            pass
         return True
 
     @process_api_handler

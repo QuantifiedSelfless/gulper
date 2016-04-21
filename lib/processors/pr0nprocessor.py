@@ -10,7 +10,7 @@ import gender_guesser.detector as GenderDetector
 from operator import itemgetter
 import random
 
-from .lib.utils import process_api_handler
+from .lib.handler import process_api_handler
 from .lib.baseprocessor import BaseProcessor
 
 

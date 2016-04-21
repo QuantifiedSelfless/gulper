@@ -6,7 +6,7 @@ from ...basehandler import BaseHandler
 from ...user import User
 
 
-def auth(val):
+def authentication(val):
     """
     Decorate a processor's handler function with an explicit authorization
     value to override the class default

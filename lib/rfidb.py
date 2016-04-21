@@ -43,6 +43,13 @@ class RFIDB(RethinkDB):
             return []
 
     @gen.coroutine
+    def delete_user(self, user_data):
+        conn = yield self.connection()
+        result = yield r.table('rfid').get(user_data.userid) \
+                        .delete().run(conn)
+        return bool(result.get('deleted'))
+
+    @gen.coroutine
     def associate_user(self, userid, rfid):
         conn = yield self.connection()
         try:
