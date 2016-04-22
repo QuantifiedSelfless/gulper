@@ -179,6 +179,8 @@ class Pr0nProcessor(BaseProcessor):
                 to_trim.update(images[10:])
         for img_del in to_trim:
             images_to_scores.pop(img_del, None)
+        if not names_to_scores:
+            return False
         blob = {
             'names_to_scores': names_to_scores,
             'names_to_gender': names_to_gender,
