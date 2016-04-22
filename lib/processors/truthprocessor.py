@@ -166,7 +166,7 @@ class TruthProcessor(BaseProcessor):
             if user_data.data['gmail'].get('text'):
                 gwords = self.get_words(user_data.data['gmail']['text'])
                 gfreq = self.word_freq(gwords)
-                if len(gfreq > 0):
+                if len(gfreq) > 0:
                     if random.randint(0, 1) == 0:
                         truth_data['true'].append(
                             "Besides articles, prepositions, and pronouns your most "
