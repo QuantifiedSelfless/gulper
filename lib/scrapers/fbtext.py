@@ -1,8 +1,8 @@
 from tornado import gen
-
 from facebook import GraphAPI
+
 from lib.config import CONFIG
-from .utils import facebook_paginate
+from .lib.utils import facebook_paginate
 
 
 class FBTextScraper(object):
@@ -19,7 +19,8 @@ class FBTextScraper(object):
         lfiltered = []
         for i in data:
             if 'message' in i:
-                pfiltered.append({'text': i['message'], 'creation_date': i['created_time']})
+                pfiltered.append({'text': i['message'],
+                                  'creation_date': i['created_time']})
             if 'link' in i:
                 lfiltered.append(i['link'])
         return pfiltered, lfiltered
@@ -31,7 +32,6 @@ class FBTextScraper(object):
         except KeyError:
             return False
         graph = GraphAPI(access_token=oauth)
-        print("[fbtext] Scraping user: ", user_data.userid)
         data = {
             "text": [],
             "links": []

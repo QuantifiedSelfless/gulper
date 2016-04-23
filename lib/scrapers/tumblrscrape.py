@@ -1,11 +1,11 @@
 from tornado import gen
-
 import pytumblr
+
 from lib.config import CONFIG
+from .lib.basescraper import BaseScraper
 
 
-class TumblrScraper(object):
-
+class TumblrScraper(BaseScraper):
     name = 'tumblr'
 
     @property
@@ -23,15 +23,14 @@ class TumblrScraper(object):
             try:
                 req = client.likes(offset=x)
                 data.append(req['liked_posts'])
-            except KeyError as e:
-                print("Exception requesting tumblr likes: ", e)
+            except KeyError:
+                self.logger.exception("Exception requesting tumblr likes")
                 break
             x += 20
         return data
 
     def clean_likes(self, data):
         cleaned = []
-
         for i in data:
             if isinstance(i, list):
                 goods = self.clean_likes(i)
@@ -44,9 +43,7 @@ class TumblrScraper(object):
                 goods['photos'] = i.get('photos', None)
                 goods['blog_name'] = i.get('blog_name', None)
                 goods['content'] = i.get('content', None)
-
             cleaned.append(goods)
-
         return cleaned
 
     @gen.coroutine
@@ -62,7 +59,8 @@ class TumblrScraper(object):
 
         consumer_key = CONFIG.get("tumblr_client_id")
         consumer_secret = CONFIG.get("tumblr_client_secret")
-        client = pytumblr.TumblrRestClient(consumer_key, consumer_secret, access, secret)
+        client = pytumblr.TumblrRestClient(consumer_key, consumer_secret,
+                                           access, secret)
         tumblr_data = {
             "hosted_blogs": [],
             "following": [],

@@ -2,8 +2,10 @@ import praw
 from tornado import gen
 from lib.config import CONFIG
 
+from .lib.basescraper import BaseScraper
 
-class RedditScraper(object):
+
+class RedditScraper(BaseScraper):
     name = 'reddit'
 
     @property

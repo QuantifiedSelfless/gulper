@@ -1,15 +1,16 @@
 from tornado import gen
 from tornado.httpclient import HTTPError
+from apiclient.discovery import build
+from oauth2client import client
 
 import httplib2
 import base64
 from email.parser import BytesParser as EmailParser
 from email import policy
-from lib.config import CONFIG
 import random
 
-from apiclient.discovery import build
-from oauth2client import client
+from lib.config import CONFIG
+from .lib.basescraper import BaseScraper
 
 
 def equalize_dict(data, max_num):
@@ -37,12 +38,12 @@ def equalize_dict(data, max_num):
     return data
 
 
-class GMailScraper(object):
+class GMailScraper(BaseScraper):
     name = 'gmail'
 
     def __init__(self):
         self.tokens = []
-        with open('lib/scrapers/snippets.txt', 'r') as fd:
+        with open('lib/scrapers/data/snippets.txt', 'r') as fd:
             self.tokens = [s.strip() for s in fd]
 
     @property
@@ -105,8 +106,8 @@ class GMailScraper(object):
             snip = msg['snippet']
             email = self.get_content(msg['raw'])
             return email, snip
-        except HTTPError as e:
-            print("Exception while scraping gmail: ", e)
+        except HTTPError:
+            self.logger.exception("Exception getting raw email")
 
     def get_meta_from_id(self, service, email_id):
         try:
@@ -115,8 +116,8 @@ class GMailScraper(object):
                 id=email_id,
                 format='metadata').execute()
             return meta
-        except HTTPError as e:
-            print("Exception while scraping gmail: ", e)
+        except HTTPError:
+            self.logger.exception("Exception getting email metadata")
 
     def get_beg_thread(self, service, thread_id):
         try:
@@ -125,8 +126,8 @@ class GMailScraper(object):
                 id=thread_id).execute()
             firstm = thr['messages'][0]['id']
             return self.get_raw_from_id(service, firstm)
-        except HTTPError as e:
-            print("Exception while scraping gmail: ", e)
+        except HTTPError:
+            self.logger.exception("Exception getting beg thread")
 
     @gen.coroutine
     def scrape(self, user_data):
@@ -156,7 +157,6 @@ class GMailScraper(object):
         # Set up client
         http = creds.authorize(httplib2.Http())
         gmail = build('gmail', 'v1', http=http)
-        print("[gmail] Scraping user: ", user_data.userid)
 
         # Get seed language tokens
         # Go through each token, seed a search to find threads we want to

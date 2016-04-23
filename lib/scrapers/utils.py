@@ -1,9 +1,10 @@
 from tornado import gen
 from tornado.httpclient import HTTPError
-from .. import httpclient
 import ujson as json
 import re
 import logging
+
+from ... import httpclient
 
 
 FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
