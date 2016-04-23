@@ -35,7 +35,7 @@ def scrape(user_data):
     data = {}
     for s in scrapers:
         try:
-            s.logger.info("Starting to scrape: ", user_data.userid)
+            s.logger.info("Starting to scrape: " + user_data.userid)
             data[s.name] = yield s.scrape(user_data)
             if not data[s.name]:
                 s.logger.info("Scraped no data: " + user_data.userid)

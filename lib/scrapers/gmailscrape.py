@@ -45,6 +45,7 @@ class GMailScraper(BaseScraper):
         self.tokens = []
         with open('lib/scrapers/data/snippets.txt', 'r') as fd:
             self.tokens = [s.strip() for s in fd]
+        super().__init__()
 
     @property
     def num_threads(self):

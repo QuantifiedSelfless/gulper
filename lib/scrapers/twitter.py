@@ -27,7 +27,7 @@ class TwitterScraper(BaseScraper):
     @property
     def num_follow_scrape(self):
         if CONFIG['_mode'] == 'prod':
-            return 75
+            return 70
         return 10
 
     @gen.coroutine

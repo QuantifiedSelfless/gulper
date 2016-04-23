@@ -3,9 +3,10 @@ from facebook import GraphAPI
 
 from lib.config import CONFIG
 from .lib.utils import facebook_paginate
+from .lib.basescraper import BaseScraper
 
 
-class FBTextScraper(object):
+class FBTextScraper(BaseScraper):
     name = 'fbtext'
 
     @property

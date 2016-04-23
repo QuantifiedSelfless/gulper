@@ -1,9 +1,10 @@
 from tornado import gen
-
 from facebook import GraphAPI
 
+from .lib.basescraper import BaseScraper
 
-class FBProfileScraper(object):
+
+class FBProfileScraper(BaseScraper):
     name = 'fbprofile'
 
     @gen.coroutine
