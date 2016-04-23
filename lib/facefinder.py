@@ -14,6 +14,7 @@ from . import httpclient
 detector = dlib.get_frontal_face_detector()
 
 
+@gen.coroutine
 def find_faces_buffer(image_fd, hash_face=False, upsample=1):
     image = Image.open(image_fd)
     image_np = np.array(image)
@@ -23,7 +24,7 @@ def find_faces_buffer(image_fd, hash_face=False, upsample=1):
     for d in data:
         d['face_hash'] = None
         if hash_face:
-            d['face_hash'] = openface.hash_face(image_np, bb=d['rect'])
+            d['face_hash'] = yield openface.hash_face(image_np, bb=d['rect'])
     return data
 
 
@@ -45,4 +46,5 @@ def find_faces_url(url, hash_face=False, upsample=1):
     if image_req.code != 200:
         return []
     image_fd = BytesIO(image_req.body)
-    return find_faces_buffer(image_fd, hash_face=hash_face, upsample=upsample)
+    return (yield find_faces_buffer(image_fd, hash_face=hash_face,
+                                    upsample=upsample))

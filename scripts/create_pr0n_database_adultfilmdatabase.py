@@ -63,7 +63,7 @@ def process_actor(name, gender, url,
     if len(scores) != 1:
         return
     try:
-        face_hash = openface.hash_face(image_np, bb=rects[0])
+        face_hash = yield openface.hash_face(image_np, bb=rects[0])
     except:
         return
     data = {

@@ -86,7 +86,7 @@ def process_subreddit(subreddit, data_path='./data/pr0n_processor/backend/'):
         if len(scores) != 1:
             continue
         try:
-            face_hash = openface.hash_face(image_np, bb=rects[0])
+            face_hash = yield openface.hash_face(image_np, bb=rects[0])
         except:
             continue
         print(subreddit, uid, url)
