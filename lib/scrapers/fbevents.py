@@ -1,10 +1,12 @@
 from tornado import gen
 from facebook import GraphAPI
-from .utils import facebook_paginate
+
 from lib.config import CONFIG
+from .lib.utils import facebook_paginate
+from .lib.basescraper import BaseScraper
 
 
-class FBEventsScraper(object):
+class FBEventsScraper(BaseScraper):
     name = 'fbevents'
 
     @property
@@ -20,18 +22,15 @@ class FBEventsScraper(object):
         except KeyError:
             return False
         graph = GraphAPI(access_token=oauth)
-        print("[fbevents] Scraping user: ", user_data.userid)
-
         events = yield facebook_paginate(
             graph.get_connections('me', connection_name='events'),
             max_results=self.num_events_per_user)
 
         data = {"events": []}
-
-        for thing in events:
-            eve = {}
-            eve['description'] = thing.get('description', None)
-            eve['name'] = thing.get('name', None)
-            eve['status'] = thing.get('rsvp_status', None)
-            data['events'].append(eve)
+        for item in events:
+            event = {}
+            event['description'] = item.get('description', None)
+            event['name'] = item.get('name', None)
+            event['status'] = item.get('rsvp_status', None)
+            data['events'].append(event)
         return data

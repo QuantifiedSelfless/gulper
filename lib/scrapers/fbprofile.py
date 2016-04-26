@@ -1,8 +1,10 @@
 from tornado import gen
-
 from facebook import GraphAPI
 
-class FBProfileScraper(object):
+from .lib.basescraper import BaseScraper
+
+
+class FBProfileScraper(BaseScraper):
     name = 'fbprofile'
 
     @gen.coroutine
@@ -12,10 +14,10 @@ class FBProfileScraper(object):
         except KeyError:
             return False
         graph = GraphAPI(access_token=oauth)
-        print("[fbprofile] Scraping user: ", user_data.userid)
-
-        profile = graph.get_object('me', 
-            fields = 'bio, birthday, education, interested_in, hometown, political, relationship_status, religion, work')
-
+        profile = graph.get_object(
+            'me',
+            fields='bio, birthday,education,interested_in,hometown,'
+                   'political,relationship_status, religion, work'
+        )
         data = profile
         return data

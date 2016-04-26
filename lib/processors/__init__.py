@@ -40,9 +40,10 @@ processors = [
 @gen.coroutine
 def process(user_data):
     result = {}
-    logger.debug("Starting to Process: " + user_data.userid)
+    logger.info("Starting to Process: " + user_data.userid)
     for p in processors:
         permission = yield p.start(user_data)
         result[p.name] = permission
-    logger.debug("Done Processing: " + user_data.userid)
+    logger.info("Done Processing: {}: {}".format(user_data.userid,
+                                                 result[p.name]))
     return result

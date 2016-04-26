@@ -2,13 +2,15 @@ from tornado import gen
 
 import httplib2
 from lib.config import CONFIG
-from .utils import apiclient_paginate
 
 from apiclient.discovery import build
 from oauth2client import client
 
+from .lib.utils import apiclient_paginate
+from .lib.basescraper import BaseScraper
 
-class YouTubeScraper(object):
+
+class YouTubeScraper(BaseScraper):
     name = 'youtube'
 
     @property
@@ -39,9 +41,7 @@ class YouTubeScraper(object):
         try:
             youtube = build('youtube', 'v3', http=http)
         except:
-            print("This user's account doesn't have youtube")
-
-        print("[youtube] Scraping user: ", user_data.userid)
+            return False
 
         userinfo = list(apiclient_paginate(youtube.channels(), 'list', {
             'part': 'statistics,contentDetails',
@@ -53,15 +53,18 @@ class YouTubeScraper(object):
         for name, playlistid in user_special_playlists.items():
             try:
                 videos = list(
-                    apiclient_paginate(youtube.playlistItems(),
-                    'list',
-                    {
-                        'part': 'snippet',
-                        'playlistId': playlistid,
-                    }, max_results=self.num_videos_per_playlist))
+                    apiclient_paginate(
+                        youtube.playlistItems(),
+                        'list',
+                        {
+                            'part': 'snippet',
+                            'playlistId': playlistid,
+                        }, max_results=self.num_videos_per_playlist
+                    )
+                )
                 special_videos[name] = videos
-            except Exception as e:
-                print("Error fetching from Youtube API: {0}".format(e))
+            except Exception:
+                self.logger.exception("Error getting special playlists")
                 continue
 
         playlists = list(apiclient_paginate(youtube.playlists(), 'list', {

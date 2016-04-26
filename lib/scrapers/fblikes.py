@@ -1,10 +1,12 @@
 from tornado import gen
 from facebook import GraphAPI
-from .utils import facebook_paginate
 from lib.config import CONFIG
 
+from .lib.utils import facebook_paginate
+from .lib.basescraper import BaseScraper
 
-class FBLikesScraper(object):
+
+class FBLikesScraper(BaseScraper):
     name = 'fblikes'
 
     @property
@@ -20,12 +22,10 @@ class FBLikesScraper(object):
         except KeyError:
             return False
         graph = GraphAPI(access_token=oauth)
-        print("[fbprofile] Scraping user: ", user_data.userid)
 
         likes = yield facebook_paginate(
             graph.get_connections('me', connection_name='likes'),
             max_results=self.num_likes_per_user)
-
         data = {'likes': []}
         for like in likes:
             data['likes'].append(like['name'])

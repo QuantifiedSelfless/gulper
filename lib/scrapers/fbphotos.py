@@ -4,12 +4,12 @@ from facebook import GraphAPI
 from lib.facefinder import find_faces_url
 from lib.config import CONFIG
 from dlib import point
-from collections import Counter
 
-from .utils import facebook_paginate
+from .lib.utils import facebook_paginate
+from .lib.basescraper import BaseScraper
 
 
-class FBPhotosScraper(object):
+class FBPhotosScraper(BaseScraper):
     name = 'fbphotos'
 
     @property

@@ -2,72 +2,65 @@ from tornado import gen
 import tweepy
 
 from ..config import CONFIG
+from .lib.basescraper import BaseScraper
 
 
-class TwitterScraper(object):
+@gen.coroutine
+def ratelimit_backoff(fxn, *args, **kwargs):
+    for _ in range(3):
+        try:
+            return fxn(*args, **kwargs)
+        except tweepy.RateLimitError:
+            yield gen.sleep(5 * 60)
+    raise tweepy.RateLimitError()
+
+
+class TwitterScraper(BaseScraper):
     name = 'twitter'
 
     @property
-    def tweet_scrape(self):
+    def num_tweet_scrape(self):
         if CONFIG['_mode'] == 'prod':
             return 250
         return 10
 
     @property
-    def follow_scrape(self):
+    def num_follow_scrape(self):
         if CONFIG['_mode'] == 'prod':
-            return 75
+            return 70
         return 10
 
     @gen.coroutine
-    def all_following(self, api, follow_list):
+    def all_following(self, api):
         data = []
-        count = 0
-        for follow in follow_list:
-            if count > self.follow_scrape:
+        friends = yield ratelimit_backoff(api.friends_ids)
+        for friend in friends:
+            if len(data) > self.num_follow_scrape:
                 break
-            user = {}
-            for _ in range(3):
-                try:
-                    nextone = api.get_user(follow)
-                    break
-                except tweepy.RateLimitError:
-                    yield gen.sleep(5 * 60)
-            else:
-                continue
-
-            user['name'] = nextone.name
-            user['description'] = nextone.description
+            friend_meta = yield ratelimit_backoff(api.get_user, friend)
+            user = {
+                'name': friend_meta.name,
+                'description': friend_meta.description,
+            }
             data.append(user)
-            count += 1
-
         return data
 
     @gen.coroutine
-    def all_tweets(self, api, total, tweets):
+    def all_tweets(self, api, max_tweets):
         data = []
-        count = 0
-        res = tweets
-        while len(data) < total and count < self.tweet_scrape and len(res) > 0:
-            for tweet in res:
-                data.append(tweet.text)
-                count += 1
-            max_id = res.max_id
-            for _ in range(3):
-                try:
-                    res = api.user_timeline(max_id=max_id)
-                    break
-                except tweepy.RateLimitError:
-                    yield gen.sleep(5 * 60)
-            else:
-                continue
-
+        max_id = None
+        max_tweets = max(max_tweets, self.num_tweet_scrape)
+        while True:
+            tweets = yield ratelimit_backoff(api.user_timeline,
+                                             max_id=max_id)
+            if not tweets or len(data) >= max_tweets:
+                break
+            data.extend(t.text for t in tweets)
+            max_id = tweets.max_id
         return data
 
     @gen.coroutine
     def scrape(self, user_data):
-
-        print("Scraping user: ", user_data.userid)
         try:
             twitter_creds = user_data.services['twitter']
         except:
@@ -84,22 +77,14 @@ class TwitterScraper(object):
         auth.access_token = twitter_creds['access_token']
         auth.access_token_secret = twitter_creds['access_token_secret']
         api = tweepy.API(auth)
-
-        data = {}
-
-        me = api.me()
+        me = yield ratelimit_backoff(api.me)
         profile_data = {
             "followers": me.followers_count,
             "description": me.description,
             "name": me.name,
-
         }
+        data = {}
         data["profile"] = profile_data
-
-        following = api.friends_ids()
-        data["following"] = yield self.all_following(api, following)
-
-        tweets = api.user_timeline()
-        data['tweets'] = yield self.all_tweets(api, me.statuses_count, tweets)
-
+        data["following"] = yield self.all_following(api)
+        data['tweets'] = yield self.all_tweets(api, me.statuses_count)
         return data

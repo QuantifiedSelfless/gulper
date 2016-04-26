@@ -2,10 +2,12 @@ from tornado import gen
 
 import spotipy
 from spotipy import oauth2
+
 from lib.config import CONFIG
+from .lib.basescraper import BaseScraper
 
 
-class SpotifyScraper(object):
+class SpotifyScraper(BaseScraper):
     name = 'spotify'
 
     @property
