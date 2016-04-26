@@ -47,6 +47,10 @@ class ListUnlockedUsers(BaseHandler):
     def get(self):
         rfidb = yield RFIDB.get_global()
         users = yield rfidb.list_users()
+        exhibitperms = yield ExhibitPermissions.get_global()
+        for user in users:
+            userid = user['id']
+            user['permissions'] = yield exhibitperms.get_permissions(userid)
         return self.api_response(users)
 
 
