@@ -28,6 +28,15 @@ class ExhibitPermissions(RethinkDB):
         return bool(result.get('deleted'))
 
     @gen.coroutine
+    def get_permissions(self, user):
+        conn = yield self.connection()
+        try:
+            result = yield r.table('exhibitpermissions').get(user).run(conn)
+            return result
+        except:
+            return {}
+
+    @gen.coroutine
     def has_permission(self, user, processor):
         conn = yield self.connection()
         try:
@@ -38,7 +47,7 @@ class ExhibitPermissions(RethinkDB):
             return False
 
     @gen.coroutine
-    def permission_meta(self, user, processor):
+    def has_permission_meta(self, user, processor):
         conn = yield self.connection()
         try:
             result = yield r.table('exhibitpermissions').get(user) \

@@ -6,6 +6,7 @@ from lib import httpclient
 from lib.basehandler import BaseHandler
 from lib.config import CONFIG
 from lib.rfidb import RFIDB
+from lib.processors.lib.exhibit_permissions import ExhibitPermissions
 
 import ujson as json
 

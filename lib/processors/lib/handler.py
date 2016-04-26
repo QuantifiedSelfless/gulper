@@ -83,13 +83,13 @@ def make_permcheck(name, checkauth):
             rfidb = yield RFIDB.get_global()
             result = []
             for userid in userids:
-                perm = yield exibperm.permission_meta(userid, name)
+                perm = yield exibperm.has_permission_meta(userid, name)
                 result.append({"userid": userid, "rfid": None,
                                "permission": (not checkauth) or perm['permission'],
                                "name": perm['name']})
             for rfid in rfids:
                 userid = yield rfidb.rfid_to_userid(rfid)
-                perm = yield exibperm.permission_meta(userid, name)
+                perm = yield exibperm.has_permission_meta(userid, name)
                 result.append({"userid": userid, "rfid": rfid,
                                "permission": (not checkauth) or perm['permission'],
                                "name": perm['name']})
