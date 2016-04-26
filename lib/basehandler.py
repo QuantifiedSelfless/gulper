@@ -32,4 +32,3 @@ class BaseHandler(web.RequestHandler):
     def get_secure_cookie(self, *args, **kwargs):
         result = super().get_secure_cookie(*args, **kwargs)
         return result.decode()
-
