@@ -11,6 +11,7 @@ class DebugProcessor(BaseProcessor):
         """
         Save user data for inspection
         """
+        self.logger.info("Saving user scrape data")
         self.save_user_blob(user_data.data, user_data)
         self.logger.info("Saved user: " + user_data.userid)
         return True

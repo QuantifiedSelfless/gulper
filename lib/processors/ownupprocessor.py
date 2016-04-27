@@ -25,7 +25,8 @@ class OwnupProcessor(BaseProcessor):
                                                        self.keywords))
         quotes += list(keyword_filters.process_reddit(user_data,
                                                       self.keywords))
-        if len(quotes) < 10:
+        self.logger.debug("User %s has %d quotes", user_data.userid, len(quotes))
+        if not quotes:
             return False
         if len(quotes) > self.num_quotes:
             quotes = random.sample(quotes, self.num_quotes)
@@ -37,7 +38,8 @@ class OwnupProcessor(BaseProcessor):
     @gen.coroutine
     def get_quotes(self, user, request):
         data = self.load_user_blob(user)
-        data['quotes'] = random.sample(data['quotes'], 10)
+        if len(data['quotes']) > 10:
+            data['quotes'] = random.sample(data['quotes'], 10)
         return data
 
     @process_api_handler
