@@ -175,8 +175,9 @@ class InterviewProcessor(BaseProcessor):
             pos_interests = self.scan_pos_interests(
                 pos_interests, likes)
 
-        testit = pos_quotes + neg_quotes + pos_interests + neg_interests + pos_events + neg_events
-        if len(testit) <= 2:
+        num_quotes = sum(len(quotes) for quotes in (pos_quotes, neg_quotes,
+                         pos_interests, neg_interests, pos_events, neg_events))
+        if num_quotes <= 2:
             return False
 
         interview_data = self.build_data(interview_data, pos_quotes, neg_quotes,
