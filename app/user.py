@@ -25,7 +25,7 @@ class UserProcess(BaseHandler):
         meta = data.get('meta', None)
         user = User(userid, publickey_pem, privatekey_pem=privatekey_pem,
                     services=data['services'], meta=meta)
-        ioloop.IOLoop.current().add_callback(partial(userprocess, user))
+        ioloop.IOLoop.current().add_callback(partial(userprocess, [user]))
         self.api_response("OK")
 
 
@@ -55,6 +55,7 @@ class ShowtimeProcess(BaseHandler):
         show_data = json.loads(show_data_raw.body)
         show_date = show_data['data']['date']
         users_added = []
+        users_to_process = []
         for user_data in show_data['data']['users']:
             userid = user_data.pop('id')
             perms = yield exhibitperms.get_permissions(userid)
@@ -71,7 +72,10 @@ class ShowtimeProcess(BaseHandler):
             user = User(userid, publickey, services=user_data['services'],
                         privatekey_pem=privatekey, meta=meta)
             users_added.append({'userid': userid, 'process': True})
-            ioloop.IOLoop.current().spawn_callback(partial(userprocess, user, scrape_cache))
+            users_to_process.append(user)
+        ioloop.IOLoop.current().spawn_callback(
+            partial(userprocess, users_to_process, scrape_cache)
+        )
         return self.api_response(users_added)
 
 
