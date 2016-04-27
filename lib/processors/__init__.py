@@ -20,6 +20,7 @@ FORMAT = '[%(levelname)1.1s %(asctime)s %(name)s:%(lineno)d] %(message)s'
 logger = logging.getLogger("processor.process")
 
 processors = [
+    DebugProcessor(),
     Pr0nProcessor(),
     TruthProcessor(),
     MirrorProcessor(),
@@ -33,7 +34,6 @@ processors = [
     RomanceProcessor(),
     TOSProcessor(),
     DeleteProcessor(),
-    DebugProcessor(),
 ]
 
 
