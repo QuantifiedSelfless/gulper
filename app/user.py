@@ -62,6 +62,7 @@ class ShowtimeProcess(BaseHandler):
                 users_added.append({'userid': userid,
                                     'permissions': perms,
                                     'process': False})
+                continue
             publickey = user_data['publickey']
             privatekey = user_data.get('privatekey')
             meta = user_data.get('meta') or {}
