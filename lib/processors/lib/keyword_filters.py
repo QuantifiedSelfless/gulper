@@ -6,7 +6,7 @@ def is_great_quote(text, keywords):
     words = set(text.split())
     if len(words) < 3:
         return False
-    if any(len(w) > 10 or 'http' in w
+    if any(len(w) > 13 or 'http' in w
             for w in words):
         return False
     if "@" in text:
