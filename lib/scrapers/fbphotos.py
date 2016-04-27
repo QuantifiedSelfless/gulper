@@ -15,8 +15,8 @@ class FBPhotosScraper(BaseScraper):
     @property
     def num_images_per_user(self):
         if CONFIG['_mode'] == 'prod':
-            return 1000
-        return 250
+            return 300
+        return 50
 
     @gen.coroutine
     def scrape(self, user_data):
