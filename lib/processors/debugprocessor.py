@@ -1,8 +1,5 @@
 from tornado import gen
-import pickle
-import os
 
-from ..config import CONFIG
 from .lib.baseprocessor import BaseProcessor
 
 
@@ -14,12 +11,9 @@ class DebugProcessor(BaseProcessor):
         """
         Save user data for inspection
         """
-        if CONFIG.get('_mode') != 'dev':
-            return False
-        filename = "./data/debug/{}.pkl".format(user_data.userid)
-        os.makedirs('./data/debug', exist_ok=True)
-        with open(filename, 'wb+') as fd:
-            pickle.dump(user_data.data, fd)
-        self.logger.info("Saved user {} to {}".format(user_data.userid,
-                                                      filename))
+        self.save_user_blob(user_data.data, user_data)
+        self.logger.info("Saved user: " + user_data.userid)
         return True
+
+    def load_scrape(self, user_data):
+        return self.load_user_blob(user_data)

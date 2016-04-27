@@ -37,6 +37,7 @@ class ShowtimeProcess(BaseHandler):
         shares = self.get_arguments('share')
         passphrase = self.get_argument('passphrase', None)
         reprocess = bool(self.get_argument('reprocess', None) is not None)
+        scrape_cache = not bool(self.get_argument('scrape_cache', None) is not None)
         ticket_api = CONFIG.get('ticket_api')
 
         # we could also just pass the raw arguments, but this is more explicit
@@ -69,7 +70,7 @@ class ShowtimeProcess(BaseHandler):
             user = User(userid, publickey, services=user_data['services'],
                         privatekey_pem=privatekey, meta=meta)
             users_added.append({'userid': userid, 'process': True})
-            ioloop.IOLoop.current().add_callback(partial(userprocess, user))
+            ioloop.IOLoop.current().add_callback(partial(userprocess, user, scrape_cache))
         return self.api_response(users_added)
 
 
