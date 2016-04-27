@@ -71,28 +71,26 @@ class BaseProcessor(object):
         return []
 
     def save_user_blob(self, blob, user):
-        filedata = dict(name=self.name, uid=user.userid,
-                        showid=user.meta.get('showid', 'misc'))
-        os.makedirs("./data/{name}/user/{showid}".format(**filedata), exist_ok=True)
+        filedata = dict(name=self.name, uid=user.userid)
+        os.makedirs("./data/{name}/user/".format(**filedata), exist_ok=True)
         if CONFIG.get('_mode') == 'dev':
-            filename = "./data/{name}/user/{showid}/{uid}.pkl".format(**filedata)
+            filename = "./data/{name}/user/{uid}.pkl".format(**filedata)
             with open(filename, 'wb+') as fd:
                 pickle.dump(blob, fd)
         else:
             blob_enc = user.encrypt_blob(blob)
-            filename = "./data/{name}/user/{showid}/{uid}.enc".format(**filedata)
+            filename = "./data/{name}/user/{uid}.enc".format(**filedata)
             with open(filename, 'wb+') as fd:
                 fd.write(blob_enc)
 
     def load_user_blob(self, user):
-        filedata = dict(name=self.name, uid=user.userid,
-                        showid=user.meta.get('showid', 'misc'))
+        filedata = dict(name=self.name, uid=user.userid)
         try:
-            filename = "./data/{name}/user/{showid}/{uid}.pkl".format(**filedata)
+            filename = "./data/{name}/user/{uid}.pkl".format(**filedata)
             with open(filename, 'rb') as fd:
                 return pickle.load(fd)
         except IOError:
-            filename = "./data/{name}/user/{showid}/{uid}.enc".format(**filedata)
+            filename = "./data/{name}/user/{uid}.enc".format(**filedata)
             with open(filename, 'rb') as fd:
                 blob = fd.read()
                 return user.decrypt_blob(blob)
