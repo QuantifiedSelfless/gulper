@@ -11,6 +11,7 @@ from collections import Counter
 class TruthProcessor(BaseProcessor):
     name = 'truth_processor'
     data = {}
+    num_items = 100
 
     def __init__(self):
         super().__init__()
@@ -82,16 +83,6 @@ class TruthProcessor(BaseProcessor):
         best_item, _ = top_10[0]
         lie, _ = random.choice(top_10[1:])
         return best_item, lie
-
-    def fill_truths(self, truestuff):
-        while len(truestuff) < self.truths:
-            truestuff.append(random.choice(self.realfacts))
-        return truestuff
-
-    def fill_lies(self, lies):
-        while len(lies) < (15 - self.truths):
-            lies.append(random.choice(self.fakefacts))
-        return lies
 
     def percentage_check(self, word, text_list, thresh, fact_str, facts, lies):
         freq = self.get_percentage(word, text_list)
@@ -225,8 +216,10 @@ class TruthProcessor(BaseProcessor):
             except IndexError:
                 pass
 
-        truth_data['true'] = self.fill_truths(truth_data['true'])
-        truth_data['false'] = self.fill_lies(truth_data['false'])
+        random.shuffle(truth_data['true'])
+        random.shuffle(truth_data['false'])
+        truth_data['true'] = truth_data['true'][:self.num_items]
+        truth_data['false'] = truth_data['false'][:self.num_items]
 
         self.save_user_blob(truth_data, user_data)
         self.logger.info("Saved truth game data")
@@ -241,6 +234,10 @@ class TruthProcessor(BaseProcessor):
         Returns relevant data that the exhibits may want to know
         """
         data = self.load_user_blob(user)
+        if len(data['true']) > 10:
+            data['true'] = random.sample(data['true'], 10)
+        if len(data['false']) > 10:
+            data['false'] = random.sample(data['false'], 10)
         return data
 
     @process_api_handler
