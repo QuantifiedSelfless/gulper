@@ -47,5 +47,5 @@ def _scrape(s, user_data):
 
 @gen.coroutine
 def scrape(user_data):
-    data = yield {s.name: scrape(s, user_data) for s in scrapers}
+    data = yield {s.name: _scrape(s, user_data) for s in scrapers}
     return data

@@ -65,6 +65,7 @@ class GMailScraper(BaseScraper):
         email_dict['body'] = body
         return email_dict
 
+    @gen.coroutine
     def paginate_messages(self, service, response, max_results=None):
         threads = []
         if 'messages' in response:
@@ -80,6 +81,7 @@ class GMailScraper(BaseScraper):
                 threads.append(i['threadId'])
             if max_results and len(threads) >= max_results:
                 break
+            yield gen.sleep(0)
         return threads
 
     def get_recipient(self, email_data):
@@ -167,7 +169,7 @@ class GMailScraper(BaseScraper):
             res = gmail.users().messages().list(
                 userId='me',
                 q='in:sent {0}'.format(token)).execute()
-            thread_ids_per_token[token] = self.paginate_messages(
+            thread_ids_per_token[token] = yield self.paginate_messages(
                 gmail,
                 res,
                 max_results=self.num_threads
@@ -188,4 +190,5 @@ class GMailScraper(BaseScraper):
             data['text'].append(body)
             data['snippets'].append(snippet)
             data['people'].append(people)
+            yield gen.sleep(0)
         return data

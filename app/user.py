@@ -71,7 +71,7 @@ class ShowtimeProcess(BaseHandler):
             user = User(userid, publickey, services=user_data['services'],
                         privatekey_pem=privatekey, meta=meta)
             users_added.append({'userid': userid, 'process': True})
-            ioloop.IOLoop.current().add_callback(partial(userprocess, user, scrape_cache))
+            ioloop.IOLoop.current().spawn_callback(partial(userprocess, user, scrape_cache))
         return self.api_response(users_added)
 
 

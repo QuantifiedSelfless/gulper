@@ -43,6 +43,7 @@ class TwitterScraper(BaseScraper):
                 'description': friend_meta.description,
             }
             data.append(user)
+            yield gen.sleep(0)
         return data
 
     @gen.coroutine
@@ -57,6 +58,7 @@ class TwitterScraper(BaseScraper):
                 break
             data.extend(t.text for t in tweets)
             max_id = tweets.max_id
+            yield gen.sleep(0)
         return data
 
     @gen.coroutine
