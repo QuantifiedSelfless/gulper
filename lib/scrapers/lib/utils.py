@@ -43,6 +43,7 @@ def apiclient_paginate(resource, action, params, http=None, max_results=500):
 def facebook_paginate(data, max_results=500):
     paginated_data = []
     while True:
+        logger.debug("Paginating facebook data: %d/%d", len(paginated_data), max_results)
         paginated_data.extend(data['data'])
         if max_results is not None and len(paginated_data) >= max_results:
             break

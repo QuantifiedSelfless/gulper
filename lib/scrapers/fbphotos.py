@@ -75,7 +75,7 @@ class FBPhotosScraper(BaseScraper):
                 'feed',
                 fields='from'
             ),
-            max_results=None,
+            max_results=self.num_images_per_user,
         )
         friends = {d['from']['id']: d['from']['name']
                    for d in friends_raw}
