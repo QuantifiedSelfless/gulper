@@ -21,8 +21,8 @@ logger = logging.getLogger("processor.process")
 
 processors = [
     DebugProcessor(),
-    Pr0nProcessor(),
     TruthProcessor(),
+    Pr0nProcessor(),
     MirrorProcessor(),
     NewsProcessor(),
     OwnupProcessor(),
