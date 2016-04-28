@@ -220,6 +220,14 @@ class TruthProcessor(BaseProcessor):
         random.shuffle(truth_data['false'])
         truth_data['true'] = truth_data['true'][:self.num_items]
         truth_data['false'] = truth_data['false'][:self.num_items]
+        if truth_data['true'] < 8:
+            missing = 8 - len(truth_data['true'])
+            truth_data['true'] += random.sample(
+                self.realfacts, missing)
+        if truth_data['false'] < 8:
+            missing = 8 - len(truth_data['false'])
+            truth_data['false'] += random.sample(
+                self.fakefacts, missing)
 
         self.save_user_blob(truth_data, user_data)
         self.logger.info("Saved truth game data")
@@ -234,10 +242,17 @@ class TruthProcessor(BaseProcessor):
         Returns relevant data that the exhibits may want to know
         """
         data = self.load_user_blob(user)
-        if len(data['true']) > 10:
-            data['true'] = random.sample(data['true'], 10)
-        if len(data['false']) > 10:
-            data['false'] = random.sample(data['false'], 10)
+        rando = random.randint(0, 1)
+        if rando == 1:
+            if len(data['true']) > 7:
+                data['true'] = random.sample(data['true'], 7)
+            if len(data['false']) > 8:
+                data['false'] = random.sample(data['false'], 8)
+        else:
+            if len(data['true']) > 8:
+                data['true'] = random.sample(data['true'], 8)
+            if len(data['false']) > 7:
+                data['false'] = random.sample(data['false'], 7)
         return data
 
     @process_api_handler
