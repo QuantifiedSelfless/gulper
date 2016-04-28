@@ -85,11 +85,11 @@ class TruthProcessor(BaseProcessor):
                     continue
                 if random.randint(0, 1) == 0:
                     new_facts.append(
-                        str_build(word, round(freq * 100)))
+                        str_build.format(word, round(freq * 100)))
                 else:
                     rand = 0
                     while rand == 0:
-                        rand = random.randint(-(freq*80), freq*200)
+                        rand = random.randint(-int(freq*80), int(freq*200))
                         new_lies.append(
                             str_build.format(word, round(freq * 100 + rand)))
         return new_facts, new_lies
