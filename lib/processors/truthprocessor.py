@@ -15,7 +15,7 @@ class TruthProcessor(BaseProcessor):
 
     def __init__(self):
         super().__init__()
-        self.stopwords = self.load_keywords("stopwords.txt")
+        self.stopwords = set(self.load_keywords("stopwords.txt"))
         self.fakefacts = self.load_keywords("fakefacts.txt")
         self.realfacts = self.load_keywords("realfacts.txt")
         self.truths = random.randint(7, 8)
@@ -25,7 +25,7 @@ class TruthProcessor(BaseProcessor):
         for text in text_list:
             if text is None:
                 continue
-            words.extend(re.findall(r"[\w']+", text))
+            words.extend(re.findall(r"\b[\w']+\b", text))
         lower = [word.lower() for word in words]
         return lower
 
