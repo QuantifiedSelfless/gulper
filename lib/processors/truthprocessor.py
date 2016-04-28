@@ -94,7 +94,7 @@ class TruthProcessor(BaseProcessor):
                             str_build.format(word, round(freq * 100 + rand)))
         return new_facts, new_lies
 
-    def check_uses(self, freq):
+    def check_uses(self, freqmap):
         str_build = "You use the word '{0}' at least {1}% on Facebook"
         new_facts = []
         new_lies = []
