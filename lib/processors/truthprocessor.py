@@ -18,7 +18,10 @@ class TruthProcessor(BaseProcessor):
         self.stopwords = set(self.load_keywords("stopwords.txt"))
         self.fakefacts = self.load_keywords("fakefacts.txt")
         self.realfacts = self.load_keywords("realfacts.txt")
-        self.truths = random.randint(7, 8)
+        self.emowords = self.load_keywords("mentalwords.text")
+        self.partywords = self.load_keywords("partywords.txt")
+        self.healthwords = self.load_keywords("healthwords.txt")
+        self.poswork = self.load_keywords("positiveworkwords.txt")
 
     def get_words(self, text_list):
         for text in text_list:
@@ -70,32 +73,47 @@ class TruthProcessor(BaseProcessor):
         lie, _ = random.choice(top_10[1:])
         return best_item, lie
 
-    def percentage_check(self, word, word_counts, num_messages, thresh, fact_str, facts, lies):
-        freq = word_counts[word] / float(num_messages)
-        if freq > thresh:
-            if random.randint(0, 1) == 0 and len(facts) <= 5:
-                facts.append(
-                    fact_str.format(round(freq * 100)))
-            else:
-                rand = 0
-                while rand == 0:
-                    rand = random.randint(-(thresh*10), thresh*10)
-                lies.append(
-                    fact_str.format(round(freq * 100 + rand)))
-        return facts, lies
+    def percentage_check(self, freqmap, N):
+        str_build = "You use the word '{0}' in approximately {1}% of your facebook posts"
+        new_facts = []
+        new_lies = []
+        words = self.partywords + self.emowords
+        for word in words:
+            if word in freqmap:
+                freq = freqmap[word] / float(N)
+                if freq < .05:
+                    continue
+                if random.randint(0, 1) == 0:
+                    new_facts.append(
+                        str_build(word, round(freq * 100)))
+                else:
+                    rand = 0
+                    while rand == 0:
+                        rand = random.randint(-(freq*80), freq*200)
+                        new_lies.append(
+                            str_build.format(word, round(freq * 100 + rand)))
+        return new_facts, new_lies
 
-    def check_uses(self, word, freq, thresh, fact_str, facts, lies, which):
-        quant = freq[word]
-        if which == 0:
-            if quant >= thresh and len(facts) <= self.truths:
-                facts.append(
-                    fact_str.format(quant))
-        else:
-            if quant >= thresh and len(lies) <= 15 - self.truths:
-                lies.append(
-                    fact_str.format(quant * random.randint(round(thresh/3),
-                                                           thresh*3)))
-        return facts, lies
+    def check_uses(self, freqmap):
+        str_build = "You use the word '{0}' at least {1}% on Facebook"
+        new_facts = []
+        new_lies = []
+        words = self.partywords + self.emowords + self.healthwords + self.poswork
+        for word in words:
+            if word in freqmap:
+                freq = freqmap[word]
+                if freq < 5:
+                    continue
+                if random.randint(0, 1) == 0:
+                    new_facts.append(
+                        str_build.format(word, freq))
+                else:
+                    rand = 0
+                    while rand == 0:
+                        rand = random.randint(-round(freq*.8), freq*3)
+                        new_lies.append(
+                            str_build.format(word, freq + rand))
+        return new_facts, new_lies
 
     @gen.coroutine
     def process(self, user_data):
@@ -159,40 +177,34 @@ class TruthProcessor(BaseProcessor):
             text_list = (post['text']
                          for post in user_data.data['fbtext']['text'])
             N = len(user_data.data['fbtext']['text'])
-            fbwords = set(self.get_words(text_list))
+            fbwords = self.get_words(text_list)
             fbfreq = self.word_freq(fbwords)
             # Later this can be a loop that tried different word, token pairs
-            truth_data['true'], truth_data['false'] = self.percentage_check(
-                    'me', fbfreq, N, .1,
-                    "You use the word \"me\" in {0}% of your facebook posts",
-                    truth_data['true'], truth_data['false'])
-            truth_data['true'], truth_data['false'] = self.percentage_check(
-                    'fuck', fbfreq, N, .05,
-                    "You use the word \"fuck\" in {0}% of your facebook posts",
-                    truth_data['true'], truth_data['false'])
-            # Now going to get into checking number of word uses
-            truth_data['true'], truth_data['false'] = self.check_uses(
-                    'yass', fbfreq, 5,
-                    "You used the word \"yass\" {0} times on facebook",
-                    truth_data['true'], truth_data['false'], 0)
-            truth_data['true'], truth_data['false'] = self.check_uses(
-                    'dafuq', fbfreq, 5,
-                    "You used the word \"dafuq\" {0} times on facebook",
-                    truth_data['true'], truth_data['false'], 0)
-            truth_data['true'], truth_data['false'] = self.check_uses(
-                    'lol', fbfreq, 5,
-                    "You used the word \"LOL\" {0} times on facebook",
-                    truth_data['true'], truth_data['false'], 1)
-            truth_data['true'], truth_data['false'] = self.check_uses(
-                    'love', fbfreq, 5,
-                    "You used the word \"love\" {0} times on facebook",
-                    truth_data['true'], truth_data['false'], 0)
+            if fbfreq:
+                if random.randint(0, 1) == 0:
+                    most_common = fbfreq.most_common(1)
+                    truth_data['true'].append(
+                            "Besides articles, prepositions, and pronouns your most "
+                            "common word on Facebook is {0}".format(most_common[0][0]))
+                else:
+                    fake = random.choice(list(fbfreq.keys()))
+                    truth_data['true'].append(
+                            "Besides articles, prepositions, and pronouns your most "
+                            "common word on Facebook is {0}".format(fake))
+
+                new_facts, new_lies = self.percentage_check(fbfreq, N)
+                truth_data['true'] += new_facts
+                truth_data['false'] += new_lies
+                new_facts, new_lies = self.check_uses(fbfreq)
+                truth_data['true'] += new_facts
+                truth_data['false'] += new_lies
+
 
         if user_data.data.get('reddit'):
             try:
                 fact, lie = self.common_subreddit(
                     user_data.data['reddit']['submissions'])
-                if (len(truth_data['true']) < len(truth_data['false'])):
+                if (len(truth_data['true']) <= len(truth_data['false'])):
                     truth_data['true'].append(
                         "Your most common subreddit you submit to is {0}".format(
                             fact))
@@ -205,8 +217,6 @@ class TruthProcessor(BaseProcessor):
 
         random.shuffle(truth_data['true'])
         random.shuffle(truth_data['false'])
-        truth_data['true'] = truth_data['true'][:self.num_items]
-        truth_data['false'] = truth_data['false'][:self.num_items]
         self.logger.info("True: %d, False: %d", len(truth_data['true']), len(truth_data['false']))
         if len(truth_data['true']) < 8:
             missing = 8 - len(truth_data['true'])
