@@ -6,6 +6,7 @@ actors = {
     "Don DeClaire": "67d37fb5-261b-41da-8d3f-2e5aff93ead1",
     "Bo Rakenfold": "1423bf50-6bfb-4eb6-997e-25dd1e801a98",
     "Lily Jordan": "244f62b1-ee51-444d-84c2-b72a39a2fdbd",
+    "hacker": "hacker",
 }
 
 
