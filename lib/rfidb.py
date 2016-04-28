@@ -1,6 +1,7 @@
 from tornado import gen
 import rethinkdb as r
 
+from collections import Counter
 from .dbhelper import RethinkDB
 from .user import User
 
@@ -53,6 +54,8 @@ class RFIDB(RethinkDB):
     def associate_user(self, userid, rfid):
         conn = yield self.connection()
         try:
+            yield r.table('rfid').get_all(rfid, index='rfid') \
+                            .update({'rfid': None}).run(conn)
             result = yield r.table('rfid').get(userid).update({'rfid': rfid}) \
                             .run(conn)
             if result['skipped'] == 1:
