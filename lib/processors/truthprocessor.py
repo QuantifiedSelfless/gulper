@@ -95,7 +95,7 @@ class TruthProcessor(BaseProcessor):
         return new_facts, new_lies
 
     def check_uses(self, freqmap):
-        str_build = "You use the word '{0}' at least {1}% on Facebook"
+        str_build = "You used the word '{0}' at least {1} times on Facebook"
         new_facts = []
         new_lies = []
         words = self.partywords + self.emowords + self.healthwords + self.poswork
