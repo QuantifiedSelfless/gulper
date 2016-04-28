@@ -18,7 +18,7 @@ class TruthProcessor(BaseProcessor):
         self.stopwords = set(self.load_keywords("stopwords.txt"))
         self.fakefacts = self.load_keywords("fakefacts.txt")
         self.realfacts = self.load_keywords("realfacts.txt")
-        self.emowords = self.load_keywords("mentalwords.text")
+        self.emowords = self.load_keywords("mentalwords.txt")
         self.partywords = self.load_keywords("partywords.txt")
         self.healthwords = self.load_keywords("healthwords.txt")
         self.poswork = self.load_keywords("positiveworkwords.txt")
