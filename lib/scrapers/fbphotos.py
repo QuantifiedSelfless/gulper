@@ -81,12 +81,13 @@ class FBPhotosScraper(BaseScraper):
                    for d in friends_raw}
         pictures = []
         profile_pic = 'http://graph.facebook.com/{}/picture?type=large'
-        for fid, fname in friends.items():
+        for i, (fid, fname) in enumerate(friends.items()):
             photo = {
                 'url': profile_pic.format(fid),
                 'id': 'img-' + fid,
             }
 
+            self.logger.debug("Friend face finding: %d / %d", i, len(friends))
             faces = yield find_faces_url(photo['url'], hash_face=True)
             # go through the faces _we_ found and interpolate those results
             # with the tags from the image
@@ -98,7 +99,7 @@ class FBPhotosScraper(BaseScraper):
 
     @gen.coroutine
     def parse_photos(self, graph, photos):
-        for photo in photos:
+        for i, photo in enumerate(photos):
             if 'tags' not in photo:
                 continue
             photo['images'].sort(key=lambda x: x['height']*x['width'])
@@ -113,6 +114,7 @@ class FBPhotosScraper(BaseScraper):
                 for t in photo['tags']['data']
                 if t.get('x') and t.get('y')
             ]
+            self.logger.debug("Face finding: %d / %d", i, len(photos))
             faces = yield find_faces_url(image_url['source'], hash_face=True)
             # go through the faces _we_ found and interpolate those results
             # with the tags from the image

@@ -201,7 +201,7 @@ class Pr0nProcessor(BaseProcessor):
         image_id = request.get_argument("id")
         try:
             preference = int(request.get_argument("preference"))
-        except ValueError: # luke's error
+        except ValueError:  # luke's error
             preference = 0
         data = self.load_user_blob(user)
         images_data = data['images_to_scores']
