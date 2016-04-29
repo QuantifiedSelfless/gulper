@@ -199,7 +199,10 @@ class Pr0nProcessor(BaseProcessor):
         Sets a users preference for a given photo
         """
         image_id = request.get_argument("id")
-        preference = int(request.get_argument("preference"))
+        try:
+            preference = int(request.get_argument("preference"))
+        except ValueError: # luke's error
+            preference = 0
         data = self.load_user_blob(user)
         images_data = data['images_to_scores']
         names_data = data['names_to_scores']
