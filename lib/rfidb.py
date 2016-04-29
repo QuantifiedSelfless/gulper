@@ -54,7 +54,7 @@ class RFIDB(RethinkDB):
     def associate_user(self, userid, rfid):
         conn = yield self.connection()
         try:
-            yield r.table('rfid').get_all(rfid, index='rfid') \
+            yield r.table('rfid').filter({"rfid": rfid}) \
                             .update({'rfid': None}).run(conn)
             result = yield r.table('rfid').get(userid).update({'rfid': rfid}) \
                             .run(conn)
