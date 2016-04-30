@@ -208,7 +208,10 @@ class Pr0nProcessor(BaseProcessor):
         names_data = data['names_to_scores']
 
         # increase the direct preference
-        images_data[image_id]['scores']['direct'] += preference
+        try:
+            images_data[image_id]['scores']['direct'] += preference
+        except KeyError:  # luke's error
+            return None
         # increase all images that have the same person in them
         for name, dist in images_data[image_id]['names'].items():
             dist = float(dist)
